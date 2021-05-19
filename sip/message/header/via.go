@@ -270,7 +270,7 @@ func (via *Via) String() string {
 		result += fmt.Sprintf(":%d", via.sentByPort)
 	}
 	if via.rport == 1 {
-		result += fmt.Sprintf(";rport")
+		result += ";rport"
 	} else if via.rport > 1 {
 		result += fmt.Sprintf(";rport=%d", via.rport)
 	}
