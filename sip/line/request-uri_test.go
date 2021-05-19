@@ -1,19 +1,18 @@
 package line
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
 	"testing"
 )
 
 func TestNewRequestUri(t *testing.T) {
-	uri := NewRequestUri("sip", "34020000002000000001", "3402000000", 0, nil)
-	data, err := json.Marshal(uri)
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Printf("%s\r\n", data)
+	reqUri := NewRequestUri("sip", "34020000002000000001", "3402000000", 0, nil)
+	fmt.Println(reqUri.GetSchema(), reqUri.GetUser(), reqUri.GetHost(), reqUri.GetPort(), reqUri.GetExtension())
+	reqUri.SetSchema("sips")
+	reqUri.SetHost("192.168.0.1")
+	reqUri.SetPort(5060)
+	fmt.Println(reqUri.String())
 }
 
 func TestRequestUri_Raw(t *testing.T) {
@@ -21,8 +20,8 @@ func TestRequestUri_Raw(t *testing.T) {
 		NewRequestUri("sip", "34020000002000000001", "3402000000", 0, nil),
 		NewRequestUri("sip", "34020000002000000001", "192.168.0.26", 5060, nil),
 	}
-	for _, uri := range uris {
-		raw, err := uri.Raw()
+	for _, reqUri := range uris {
+		raw, err := reqUri.Raw()
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -36,15 +35,11 @@ func TestRequestUri_Parse(t *testing.T) {
 		"sip:34020000002000000001@192.168.0.26:5060",
 	}
 	for _, raw := range raws {
-		uri := new(RequestUri)
-		err := uri.Parse(raw)
+		reqUri := new(RequestUri)
+		err := reqUri.Parse(raw)
 		if err != nil {
 			log.Fatal(err)
 		}
-		data, err := json.Marshal(uri)
-		if err != nil {
-			log.Fatal(err)
-		}
-		fmt.Printf("%s\r\n", data)
+		fmt.Println(reqUri.String())
 	}
 }

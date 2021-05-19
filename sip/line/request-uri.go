@@ -11,89 +11,83 @@ import (
 )
 
 type RequestUri struct {
-	Schema    string                 `json:"Schema"`
-	User      string                 `json:"User"`
-	Host      string                 `json:"Host"`
-	Port      uint16                 `json:"Port"`
-	Extension map[string]interface{} `json:"Extension"`
+	schema    string                 //schema
+	user      string                 // user
+	host      string                 // host
+	port      uint16                 // port
+	extension map[string]interface{} // extension
 }
 
-func (uri *RequestUri) SetSchema(schema string) {
-	uri.Schema = schema
+func (requestUri *RequestUri) SetSchema(schema string) {
+	requestUri.schema = schema
 }
-func (uri *RequestUri) GetSchema() string {
-	return uri.Schema
+func (requestUri *RequestUri) GetSchema() string {
+	return requestUri.schema
 }
-func (uri *RequestUri) SetUser(user string) {
-	uri.User = user
+func (requestUri *RequestUri) SetUser(user string) {
+	requestUri.user = user
 }
-func (uri *RequestUri) GetUser() string {
-	return uri.User
+func (requestUri *RequestUri) GetUser() string {
+	return requestUri.user
 }
-func (uri *RequestUri) SetHost(host string) {
-	uri.Host = host
+func (requestUri *RequestUri) SetHost(host string) {
+	requestUri.host = host
 }
-func (uri *RequestUri) GetHost() string {
-	return uri.Host
+func (requestUri *RequestUri) GetHost() string {
+	return requestUri.host
 }
-func (uri *RequestUri) SetPort(port uint16) {
-	uri.Port = port
+func (requestUri *RequestUri) SetPort(port uint16) {
+	requestUri.port = port
 }
-func (uri *RequestUri) GetPort() uint16 {
-	return uri.Port
+func (requestUri *RequestUri) GetPort() uint16 {
+	return requestUri.port
 }
-func (uri *RequestUri) SetExtension(extension map[string]interface{}) {
-	uri.Extension = extension
+func (requestUri *RequestUri) SetExtension(extension map[string]interface{}) {
+	requestUri.extension = extension
 }
-func (uri *RequestUri) GetExtension() map[string]interface{} {
-	if uri.Extension != nil {
-		return uri.Extension
-	}
-	return nil
+func (requestUri *RequestUri) GetExtension() map[string]interface{} {
+	return requestUri.extension
 }
 func NewRequestUri(schema, user, host string, port uint16, extension map[string]interface{}) *RequestUri {
 	return &RequestUri{
-		Schema:    schema,
-		User:      user,
-		Host:      host,
-		Port:      port,
-		Extension: extension,
+		schema:    schema,
+		user:      user,
+		host:      host,
+		port:      port,
+		extension: extension,
 	}
 }
 
-func (uri *RequestUri) Raw() (string, error) {
+func (requestUri *RequestUri) Raw() (string, error) {
 	result := ""
-	if err := uri.Validator(); err != nil {
+	if err := requestUri.Validator(); err != nil {
 		return result, err
 	}
-	result += fmt.Sprintf("%s:%s@%s", strings.ToLower(uri.Schema), uri.User, uri.Host)
-	if uri.Port > 0 {
-		result += fmt.Sprintf(":%d", uri.Port)
+	result += fmt.Sprintf("%s:%s@%s", strings.ToLower(requestUri.schema), requestUri.user, requestUri.host)
+	if requestUri.port > 0 {
+		result += fmt.Sprintf(":%d", requestUri.port)
 	}
-	if uri.Extension != nil {
+	if requestUri.extension != nil {
 		extensions := ""
-		for k, v := range uri.Extension {
+		for k, v := range requestUri.extension {
 			if len(strings.TrimSpace(fmt.Sprintf("%v", v))) == 0 {
 				extensions += fmt.Sprintf(";%s", k)
 			} else {
 				extensions += fmt.Sprintf(";%s=%v", k, v)
 			}
 		}
-
 		if len(strings.TrimSpace(extensions)) > 0 {
 			result += extensions
 		}
 	}
 	return result, nil
 }
-func (uri *RequestUri) Parse(raw string) error {
-	if reflect.DeepEqual(nil, uri) {
+func (requestUri *RequestUri) Parse(raw string) error {
+	if reflect.DeepEqual(nil, requestUri) {
 		return errors.New("request-uri caller is not allowed to be nil")
 	}
 	raw = regexp.MustCompile(`\r`).ReplaceAllString(raw, "")
 	raw = regexp.MustCompile(`\n`).ReplaceAllString(raw, "")
-	raw = strings.TrimLeft(raw, " ")
-	raw = strings.TrimRight(raw, " ")
 	raw = strings.TrimPrefix(raw, " ")
 	raw = strings.TrimSuffix(raw, " ")
 	if len(strings.TrimSpace(raw)) == 0 {
@@ -104,12 +98,12 @@ func (uri *RequestUri) Parse(raw string) error {
 		schemaAndUserAndHostAndPortStr := schemaAndUserAndHostAndPortRegexp.FindString(raw)
 		schemaRegexp := regexp.MustCompile(`(?i)(sip):`)
 		if schemaRegexp.MatchString(schemaAndUserAndHostAndPortStr) {
-			uri.Schema = strings.ToLower(regexp.MustCompile(`:`).ReplaceAllString(schemaRegexp.FindString(schemaAndUserAndHostAndPortStr), ""))
+			requestUri.schema = strings.ToLower(regexp.MustCompile(`:`).ReplaceAllString(schemaRegexp.FindString(schemaAndUserAndHostAndPortStr), ""))
 			schemaAndUserAndHostAndPortStr = schemaRegexp.ReplaceAllString(schemaAndUserAndHostAndPortStr, "")
 		}
 		userRegexp := regexp.MustCompile(`\d{20}@`)
 		if userRegexp.MatchString(schemaAndUserAndHostAndPortStr) {
-			uri.User = regexp.MustCompile(`@`).ReplaceAllString(userRegexp.FindString(schemaAndUserAndHostAndPortStr), "")
+			requestUri.user = regexp.MustCompile(`@`).ReplaceAllString(userRegexp.FindString(schemaAndUserAndHostAndPortStr), "")
 			schemaAndUserAndHostAndPortStr = userRegexp.ReplaceAllString(schemaAndUserAndHostAndPortStr, "")
 		}
 		portRegexp := regexp.MustCompile(`:\d+`)
@@ -119,15 +113,11 @@ func (uri *RequestUri) Parse(raw string) error {
 			if err != nil {
 				return err
 			}
-			uri.Port = uint16(port)
+			requestUri.port = uint16(port)
 			schemaAndUserAndHostAndPortStr = portRegexp.ReplaceAllString(schemaAndUserAndHostAndPortStr, "")
 		}
-		schemaAndUserAndHostAndPortStr = strings.TrimLeft(schemaAndUserAndHostAndPortStr, " ")
-		schemaAndUserAndHostAndPortStr = strings.TrimRight(schemaAndUserAndHostAndPortStr, " ")
 		schemaAndUserAndHostAndPortStr = strings.TrimPrefix(schemaAndUserAndHostAndPortStr, " ")
 		schemaAndUserAndHostAndPortStr = strings.TrimSuffix(schemaAndUserAndHostAndPortStr, " ")
-		schemaAndUserAndHostAndPortStr = strings.TrimLeft(schemaAndUserAndHostAndPortStr, ";")
-		schemaAndUserAndHostAndPortStr = strings.TrimRight(schemaAndUserAndHostAndPortStr, ";")
 		schemaAndUserAndHostAndPortStr = strings.TrimPrefix(schemaAndUserAndHostAndPortStr, ";")
 		schemaAndUserAndHostAndPortStr = strings.TrimSuffix(schemaAndUserAndHostAndPortStr, ";")
 		if len(strings.TrimSpace(schemaAndUserAndHostAndPortStr)) > 0 && strings.Contains(schemaAndUserAndHostAndPortStr, ";") {
@@ -150,69 +140,67 @@ func (uri *RequestUri) Parse(raw string) error {
 				}
 			}
 			if len(m) > 0 {
-				uri.Extension = m
+				requestUri.extension = m
 			}
 			schemaAndUserAndHostAndPortStr = parametersRegexp.ReplaceAllString(schemaAndUserAndHostAndPortStr, "")
 		}
 		if len(strings.TrimSpace(schemaAndUserAndHostAndPortStr)) > 0 {
-			uri.Host = schemaAndUserAndHostAndPortStr
+			requestUri.host = schemaAndUserAndHostAndPortStr
 		}
 	}
-	return uri.Validator()
-
-	// schemaRegexp := regexp.MustCompile(`(?i)(sip):`)
-	// if schemaRegexp.MatchString(raw) {
-	// 	uri.Schema = strings.ToLower(regexp.MustCompile(`:`).ReplaceAllString(schemaRegexp.FindString(raw), ""))
-	// 	raw = schemaRegexp.ReplaceAllString(raw, "")
-	// }
-	// userRegexp := regexp.MustCompile(`\d{20}@`)
-	// if userRegexp.MatchString(raw) {
-	// 	uri.User = regexp.MustCompile(`@`).ReplaceAllString(userRegexp.FindString(raw), "")
-	// 	raw = userRegexp.ReplaceAllString(raw, "")
-	// }
-	// portRegexp := regexp.MustCompile(`:\d+`)
-	// if portRegexp.MatchString(raw) {
-	// 	portStr := regexp.MustCompile(`:`).ReplaceAllString(portRegexp.FindString(raw), "")
-	// 	port, err := strconv.Atoi(portStr)
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// 	uri.Port = uint16(port)
-	// 	raw = portRegexp.ReplaceAllString(raw, "")
-	// }
-	// if len(strings.TrimSpace(raw)) > 0 {
-	// 	uri.Host = raw
-	// }
-	// return uri.Validator()
+	return requestUri.Validator()
 }
 
-func (uri *RequestUri) Validator() error {
-	if reflect.DeepEqual(nil, uri) {
+func (requestUri *RequestUri) Validator() error {
+	if reflect.DeepEqual(nil, requestUri) {
 		return errors.New("request-uri caller is not allowed to be nil")
 	}
-	if len(strings.TrimSpace(uri.Schema)) == 0 {
+	if len(strings.TrimSpace(requestUri.schema)) == 0 {
 		return errors.New("the schema field is not allowed to be empty")
 	}
-	if !regexp.MustCompile(`(?i)(sip)$`).MatchString(uri.Schema) {
+	if !regexp.MustCompile(`(?i)(sip)$`).MatchString(requestUri.schema) {
 		return errors.New("the value of the schema field must be sip")
 	}
-	if len(strings.TrimSpace(uri.User)) == 0 {
+	if len(strings.TrimSpace(requestUri.user)) == 0 {
 		return errors.New("the user field is not allowed to be empty")
 	}
-	if !regexp.MustCompile(`\d{20}`).MatchString(uri.User) {
+	if !regexp.MustCompile(`\d{20}`).MatchString(requestUri.user) {
 		return errors.New("the user field must be 20 digits")
 	}
-	if len(strings.TrimSpace(uri.Host)) == 0 {
+	if len(strings.TrimSpace(requestUri.host)) == 0 {
 		return errors.New("the host field is not allowed to be empty")
 	}
-	if ip := net.ParseIP(uri.Host); ip != nil {
-		if uri.Port == 0 {
+	if ip := net.ParseIP(requestUri.host); ip != nil {
+		if requestUri.port == 0 {
 			return errors.New("the host field gives the ip address, the port must be given")
 		}
 	} else {
-		if !reflect.DeepEqual(uri.Host, uri.User[:10]) {
+		if !reflect.DeepEqual(requestUri.host, requestUri.user[:10]) {
 			return errors.New("the realm given by the host field must be consistent with the first 10 digits of the user")
 		}
 	}
 	return nil
+}
+
+func (requestUri *RequestUri) String() string {
+	result := ""
+	result += fmt.Sprintf("%s:%s@%s", strings.ToLower(requestUri.schema), requestUri.user, requestUri.host)
+	if requestUri.port > 0 {
+		result += fmt.Sprintf(":%d", requestUri.port)
+	}
+	if requestUri.extension != nil {
+		extensions := ""
+		for k, v := range requestUri.extension {
+			if len(strings.TrimSpace(fmt.Sprintf("%v", v))) == 0 {
+				extensions += fmt.Sprintf(";%s", k)
+			} else {
+				extensions += fmt.Sprintf(";%s=%v", k, v)
+			}
+		}
+
+		if len(strings.TrimSpace(extensions)) > 0 {
+			result += extensions
+		}
+	}
+	return result
 }

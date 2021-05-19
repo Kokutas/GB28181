@@ -9,70 +9,70 @@ import (
 )
 
 type Authorization struct {
-	AuthSchema string `json:"AuthSchema"` // basic / digest
-	UserName   string `json:"UserName"`
-	Realm      string `json:"Realm"`
-	Nonce      string `json:"Nonce"`
-	*Uri       `json:"Uri"`
-	Response   string `json:"Response"`
-	Algorithm  string `json:"Algorithm"`
+	authSchema string // auth-schema: Basic / Digest
+	username   string // username
+	realm      string // realm
+	nonce      string // nonce
+	uri        *Uri   // Uri
+	response   string // response
+	algorithm  string // algorithm
 }
 
 func (authorization *Authorization) SetAuthSchema(authSchema string) {
-	authorization.AuthSchema = authSchema
+	authorization.authSchema = authSchema
 }
 func (authorization *Authorization) GetAuthSchema() string {
-	return authorization.AuthSchema
+	return authorization.authSchema
 }
 func (authorization *Authorization) SetUserName(username string) {
-	authorization.UserName = username
+	authorization.username = username
 }
 func (authorization *Authorization) GetUserName() string {
-	return authorization.UserName
+	return authorization.username
 }
 func (authorization *Authorization) SetRealm(realm string) {
-	authorization.Realm = realm
+	authorization.realm = realm
 }
 func (authorization *Authorization) GetRealm() string {
-	return authorization.Realm
+	return authorization.realm
 }
 func (authorization *Authorization) SetNonce(nonce string) {
-	authorization.Nonce = nonce
+	authorization.nonce = nonce
 }
 func (authorization *Authorization) GetNonce() string {
-	return authorization.Nonce
+	return authorization.nonce
 }
 
 func (authorization *Authorization) SetUri(uri *Uri) {
-	authorization.Uri = uri
+	authorization.uri = uri
 }
 func (authorization *Authorization) GetUri() *Uri {
-	if authorization.Uri != nil {
-		return authorization.Uri
+	if authorization.uri != nil {
+		return authorization.uri
 	}
 	return nil
 }
 func (authorization *Authorization) SetResponse(response string) {
-	authorization.Response = response
+	authorization.response = response
 }
 func (authorization *Authorization) GetResponse() string {
-	return authorization.Response
+	return authorization.response
 }
 func (authorization *Authorization) SetAlgorithm(algorithm string) {
-	authorization.Algorithm = algorithm
+	authorization.algorithm = algorithm
 }
 func (authorization *Authorization) GetAlgorithm() string {
-	return authorization.Algorithm
+	return authorization.algorithm
 }
 func NewAuthorization(authSchema string, username string, realm string, nonce string, uri *Uri, response string, algorithm string) *Authorization {
 	return &Authorization{
-		AuthSchema: authSchema,
-		UserName:   username,
-		Realm:      realm,
-		Nonce:      nonce,
-		Uri:        uri,
-		Response:   response,
-		Algorithm:  algorithm,
+		authSchema: authSchema,
+		username:   username,
+		realm:      realm,
+		nonce:      nonce,
+		uri:        uri,
+		response:   response,
+		algorithm:  algorithm,
 	}
 }
 
@@ -81,12 +81,12 @@ func (authorization *Authorization) Raw() (string, error) {
 	if err := authorization.Validator(); err != nil {
 		return result, err
 	}
-	uriStr, err := authorization.Uri.Raw()
+	uriStr, err := authorization.uri.Raw()
 	if err != nil {
 		return result, err
 	}
 	result += fmt.Sprintf("Authorization: %s username=\"%s\",realm=\"%s\",nonce=\"%s\",uri=\"%s\",response=\"%s\",algorithm=%s",
-		strings.Title(authorization.AuthSchema), authorization.UserName, authorization.Realm, authorization.Nonce, uriStr, authorization.Response, strings.ToUpper(authorization.Algorithm))
+		strings.Title(authorization.authSchema), authorization.username, authorization.realm, authorization.nonce, uriStr, authorization.response, strings.ToUpper(authorization.algorithm))
 	result += "\r\n"
 	return result, nil
 }
@@ -117,7 +117,7 @@ func (authorization *Authorization) Parse(raw string) error {
 	// auth schema regexp
 	authSchemaRegexp := regexp.MustCompile(`(?i)(digest|basic)`)
 	if authSchemaRegexp.MatchString(raw) {
-		authorization.AuthSchema = authSchemaRegexp.FindString(raw)
+		authorization.authSchema = authSchemaRegexp.FindString(raw)
 	}
 	raw = authSchemaRegexp.ReplaceAllString(raw, "")
 	raw = strings.TrimLeft(raw, " ")
@@ -144,25 +144,25 @@ func (authorization *Authorization) Parse(raw string) error {
 	for _, raws := range rawSlice {
 		switch {
 		case usernameRegexp.MatchString(raws):
-			authorization.UserName = usernameRegexp.ReplaceAllString(raws, "")
+			authorization.username = usernameRegexp.ReplaceAllString(raws, "")
 		case realmRegexp.MatchString(raws):
-			authorization.Realm = realmRegexp.ReplaceAllString(raws, "")
+			authorization.realm = realmRegexp.ReplaceAllString(raws, "")
 		case nonceRegexp.MatchString(raws):
-			authorization.Nonce = nonceRegexp.ReplaceAllString(raws, "")
+			authorization.nonce = nonceRegexp.ReplaceAllString(raws, "")
 		case uriRegexp.MatchString(raws):
-			authorization.Uri = new(Uri)
+			authorization.uri = new(Uri)
 			uriStr := uriRegexp.ReplaceAllString(raws, "")
 			uriStr = regexp.MustCompile(`"`).ReplaceAllString(uriStr, "")
 			uriStr = regexp.MustCompile(`<`).ReplaceAllString(uriStr, "")
 			uriStr = regexp.MustCompile(`>`).ReplaceAllString(uriStr, "")
-			if err := authorization.Uri.Parse(uriStr); err != nil {
+			if err := authorization.uri.Parse(uriStr); err != nil {
 				return err
 			}
 		case responseRegexp.MatchString(raws):
-			authorization.Response = responseRegexp.ReplaceAllString(raws, "")
+			authorization.response = responseRegexp.ReplaceAllString(raws, "")
 
 		case algorithmRegexp.MatchString(raws):
-			authorization.Algorithm = algorithmRegexp.ReplaceAllString(raws, "")
+			authorization.algorithm = algorithmRegexp.ReplaceAllString(raws, "")
 		}
 	}
 	return authorization.Validator()
@@ -172,25 +172,25 @@ func (authorization *Authorization) Validator() error {
 		return errors.New("authorization caller is not allowed to be nil")
 	}
 	authSchemaRegexp := regexp.MustCompile(`(?i)(digest|basic)`)
-	if !authSchemaRegexp.MatchString(authorization.AuthSchema) {
+	if !authSchemaRegexp.MatchString(authorization.authSchema) {
 		return errors.New("the value of the authschema field must be Digest")
 	}
-	if len(strings.TrimSpace(authorization.UserName)) == 0 {
+	if len(strings.TrimSpace(authorization.username)) == 0 {
 		return errors.New("the username field is not allowed to be empty")
 	}
-	if len(strings.TrimSpace(authorization.Realm)) == 0 {
+	if len(strings.TrimSpace(authorization.realm)) == 0 {
 		return errors.New("the realm field is not allowed to be empty")
 	}
-	if len(strings.TrimSpace(authorization.Nonce)) == 0 {
+	if len(strings.TrimSpace(authorization.nonce)) == 0 {
 		return errors.New("the nonce field is not allowed to be empty")
 	}
-	if err := authorization.Uri.Validator(); err != nil {
+	if err := authorization.uri.Validator(); err != nil {
 		return err
 	}
-	if len(strings.TrimSpace(authorization.Response)) == 0 {
+	if len(strings.TrimSpace(authorization.response)) == 0 {
 		return errors.New("the response field is not allowed to be empty")
 	}
-	if !regexp.MustCompile(`(?i)(md5)`).MatchString(authorization.Algorithm) {
+	if !regexp.MustCompile(`(?i)(md5)`).MatchString(authorization.algorithm) {
 		return errors.New("the value of the algorithm field must be MD5")
 	}
 	return nil

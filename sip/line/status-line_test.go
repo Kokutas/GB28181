@@ -1,7 +1,6 @@
 package line
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
 	"testing"
@@ -13,11 +12,7 @@ func TestNewStatusLine(t *testing.T) {
 		NewStatusLine("sip", 2.0, 200, "No"),
 	}
 	for _, statusLine := range statusLines {
-		data, err := json.Marshal(statusLine)
-		if err != nil {
-			log.Fatal(err)
-		}
-		fmt.Printf("%s\r\n", data)
+		fmt.Print(statusLine.GetSchema(), statusLine.GetVersion(), statusLine.GetStatusCode(), statusLine.GetReasonPhrase())
 	}
 }
 

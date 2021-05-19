@@ -9,26 +9,26 @@ import (
 )
 
 type CallID struct {
-	ID   string `json:"ID"`
-	Host string `json:"Host"`
+	id   string // ID
+	host string // host
 }
 
-func (callId *CallID) SetID(id string) {
-	callId.ID = id
+func (callId *CallID) SetId(id string) {
+	callId.id = id
 }
-func (callId *CallID) GetID() string {
-	return callId.ID
+func (callId *CallID) GetId() string {
+	return callId.id
 }
 func (callId *CallID) SetHost(host string) {
-	callId.Host = host
+	callId.host = host
 }
 func (callId *CallID) GetHost() string {
-	return callId.Host
+	return callId.host
 }
 func NewCallID(id string, host string) *CallID {
 	return &CallID{
-		ID:   id,
-		Host: host,
+		id:   id,
+		host: host,
 	}
 }
 
@@ -37,10 +37,10 @@ func (callId *CallID) Raw() (string, error) {
 	if err := callId.Validator(); err != nil {
 		return result, err
 	}
-	if len(strings.TrimSpace(callId.Host)) > 0 {
-		result += fmt.Sprintf("Call-ID: %s@%s", callId.ID, callId.Host)
+	if len(strings.TrimSpace(callId.host)) > 0 {
+		result += fmt.Sprintf("Call-ID: %s@%s", callId.id, callId.host)
 	} else {
-		result += fmt.Sprintf("Call-ID: %s", callId.ID)
+		result += fmt.Sprintf("Call-ID: %s", callId.id)
 	}
 	result += "\r\n"
 	return result, nil
@@ -71,17 +71,17 @@ func (callId *CallID) Parse(raw string) error {
 	// host regexp
 	hostRegexp := regexp.MustCompile(`@.*`)
 	if hostRegexp.MatchString(raw) {
-		callId.Host = regexp.MustCompile(`@`).ReplaceAllString(hostRegexp.FindString(raw), "")
+		callId.host = regexp.MustCompile(`@`).ReplaceAllString(hostRegexp.FindString(raw), "")
 		raw = hostRegexp.ReplaceAllString(raw, "")
 	}
-	callId.ID = raw
+	callId.id = raw
 	return callId.Validator()
 }
 func (callId *CallID) Validator() error {
 	if reflect.DeepEqual(nil, callId) {
 		return errors.New("call-id caller is not allowed to be nil")
 	}
-	if len(strings.TrimSpace(callId.ID)) == 0 {
+	if len(strings.TrimSpace(callId.id)) == 0 {
 		return errors.New("the id field is not allowed to be empty")
 	}
 	return nil

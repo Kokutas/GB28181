@@ -9,41 +9,41 @@ import (
 )
 
 type Contact struct {
-	DisplayName string `json:"Display-Name"`
-	*Uri        `json:"Uri"`
-	Extension   map[string]interface{} `json:"Extension"`
+	displayName string                 // Display-Name
+	uri         *Uri                   // uri
+	extension   map[string]interface{} // extension
 }
 
 func (contact *Contact) SetDisplayName(displayName string) {
-	contact.DisplayName = displayName
+	contact.displayName = displayName
 }
 func (contact *Contact) GetDisplayName() string {
-	return contact.DisplayName
+	return contact.displayName
 }
 func (contact *Contact) SetUri(uri *Uri) {
-	contact.Uri = uri
+	contact.uri = uri
 }
 func (contact *Contact) GetUri() *Uri {
-	if contact.Uri != nil {
-		return contact.Uri
+	if contact.uri != nil {
+		return contact.uri
 	}
 	return nil
 }
 func (contact *Contact) SetExtension(extensions map[string]interface{}) {
-	contact.Extension = extensions
+	contact.extension = extensions
 }
 func (contact *Contact) GetExtension() map[string]interface{} {
-	if contact.Extension != nil {
-		return contact.Extension
+	if contact.extension != nil {
+		return contact.extension
 	}
 	return nil
 }
 
 func NewContact(displayName string, uri *Uri, extension map[string]interface{}) *Contact {
 	return &Contact{
-		DisplayName: displayName,
-		Uri:         uri,
-		Extension:   extension,
+		displayName: displayName,
+		uri:         uri,
+		extension:   extension,
 	}
 }
 func (contact *Contact) Raw() (string, error) {
@@ -51,18 +51,18 @@ func (contact *Contact) Raw() (string, error) {
 	if err := contact.Validator(); err != nil {
 		return result, err
 	}
-	uri, err := contact.Uri.Raw()
+	uri, err := contact.uri.Raw()
 	if err != nil {
 		return result, err
 	}
-	if len(strings.TrimSpace(contact.DisplayName)) == 0 {
+	if len(strings.TrimSpace(contact.displayName)) == 0 {
 		result += fmt.Sprintf("Contact: <%s>", uri)
 	} else {
-		result += fmt.Sprintf("Contact: \"%s\" %s", contact.DisplayName, uri)
+		result += fmt.Sprintf("Contact: \"%s\" %s", contact.displayName, uri)
 	}
-	if contact.Extension != nil {
+	if contact.extension != nil {
 		extensions := ""
-		for k, v := range contact.Extension {
+		for k, v := range contact.extension {
 			if len(strings.TrimSpace(fmt.Sprintf("%v", v))) == 0 {
 				extensions += fmt.Sprintf(";%s", k)
 			} else {
@@ -124,7 +124,7 @@ func (contact *Contact) Parse(raw string) error {
 			}
 		}
 		if len(m) > 0 {
-			contact.Extension = m
+			contact.extension = m
 		}
 	}
 	raw = extensionsRegexp.ReplaceAllString(raw, "")
@@ -139,8 +139,8 @@ func (contact *Contact) Parse(raw string) error {
 		uris := uriRegex.FindString(raw)
 		uris = regexp.MustCompile(`>`).ReplaceAllString(uris, "")
 		uris = regexp.MustCompile(`<`).ReplaceAllString(uris, "")
-		contact.Uri = new(Uri)
-		if err := contact.Uri.Parse(uris); err != nil {
+		contact.uri = new(Uri)
+		if err := contact.uri.Parse(uris); err != nil {
 			return err
 		}
 	}
@@ -156,7 +156,7 @@ func (contact *Contact) Parse(raw string) error {
 	raw = strings.TrimSuffix(raw, " ")
 	// display name regexp
 	if len(strings.TrimSpace(raw)) > 0 {
-		contact.DisplayName = raw
+		contact.displayName = raw
 	}
 
 	return contact.Validator()
@@ -165,7 +165,7 @@ func (contact *Contact) Validator() error {
 	if reflect.DeepEqual(nil, contact) {
 		return errors.New("contact caller is not allowed to be nil")
 	}
-	if err := contact.Uri.Validator(); err != nil {
+	if err := contact.uri.Validator(); err != nil {
 		return fmt.Errorf("contact uri validator error : %s", err.Error())
 	}
 	return nil

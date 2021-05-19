@@ -1,19 +1,16 @@
 package line
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
 	"testing"
 )
 
 func TestNewRequestLine(t *testing.T) {
-	reqLine := NewRequestLine("registers", NewRequestUri("sip", "34020000002000000001", "3402000000", 0, nil), "sip", 2.0)
-	data, err := json.Marshal(reqLine)
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Printf("%s\r\n", data)
+	reqLine := NewRequestLine("register", NewRequestUri("sip", "34020000002000000001", "3402000000", 0, nil), "sip", 2.0)
+	fmt.Println(reqLine.GetMethod(), reqLine.GetReqUri().String(), reqLine.GetSchema(), reqLine.GetVersion())
+	reqLine.SetMethod("invite")
+	fmt.Println(reqLine.String())
 }
 
 func TestRequestLine_Raw(t *testing.T) {
@@ -42,6 +39,10 @@ func TestRequestLine_Parse(t *testing.T) {
 		if err := reqLine.Parse(raw); err != nil {
 			log.Fatal(err)
 		}
-		fmt.Print(reqLine.Raw())
+		str, err := reqLine.Raw()
+		if err != nil {
+			log.Fatal(err)
+		}
+		fmt.Print(str)
 	}
 }
