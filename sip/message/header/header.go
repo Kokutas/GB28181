@@ -8,33 +8,59 @@ import (
 	"strings"
 )
 
-type Head struct {
-	*Via
-	*From
-	*To
+type Header struct {
+	*Authorization
 	*CallID
-	*CSeq
 	*Contact
-	*MaxForwards
-	*Expires
 	*ContentLength
+	*ContentType
+	*CSeq
+	*Expires
+	*From
+	*MaxForwards
+	*Route
+	*To
+	*UserAgent
+	*Via
+	*WWWAuthenticate
 }
 
-func NewHead(via *Via, from *From, to *To, callId *CallID, cseq *CSeq, contact *Contact, maxForwards *MaxForwards, expires *Expires, contentLength *ContentLength) *Head {
-	return &Head{
-		Via:           via,
-		From:          from,
-		To:            to,
-		CallID:        callId,
-		CSeq:          cseq,
-		Contact:       contact,
-		MaxForwards:   maxForwards,
-		Expires:       expires,
-		ContentLength: contentLength,
+func NewHeader(
+	authorization *Authorization,
+	callId *CallID,
+	contact *Contact,
+	contentLength *ContentLength,
+	contentType *ContentType,
+	cSeq *CSeq,
+	expires *Expires,
+	from *From,
+	maxForwards *MaxForwards,
+	route *Route,
+	to *To,
+	userAgent *UserAgent,
+	via *Via,
+	wwwAuthenticate *WWWAuthenticate,
+
+) *Header {
+	return &Header{
+		Authorization:   authorization,
+		CallID:          callId,
+		Contact:         contact,
+		ContentLength:   contentLength,
+		ContentType:     contentType,
+		CSeq:            cSeq,
+		Expires:         expires,
+		From:            from,
+		MaxForwards:     maxForwards,
+		Route:           route,
+		To:              to,
+		UserAgent:       userAgent,
+		Via:             via,
+		WWWAuthenticate: wwwAuthenticate,
 	}
 }
 
-func (head *Head) Raw() (string, error) {
+func (head *Header) Raw() (string, error) {
 	result := ""
 	if err := head.Validator(); err != nil {
 		return result, err
@@ -81,7 +107,7 @@ func (head *Head) Raw() (string, error) {
 	return result, nil
 }
 
-func (head *Head) Parse(raw string) error {
+func (head *Header) Parse(raw string) error {
 	if reflect.DeepEqual(nil, head) {
 		return errors.New("head caller is not allowed to be nil")
 	}
@@ -152,11 +178,87 @@ func (head *Head) Parse(raw string) error {
 		}
 	}
 
-	return nil
+	return head.Validator()
 }
-func (head *Head) Validator() error {
+func (head *Header) Validator() error {
 	if reflect.DeepEqual(nil, head) {
 		return errors.New("head caller is not allowed to be nil")
 	}
+	// via,from,to,callid,contact,length,expires
+	if !reflect.DeepEqual(nil, head.Authorization) {
+		if err := head.Authorization.Validator(); err != nil {
+			return err
+		}
+	}
+	if !reflect.DeepEqual(nil, head.CallID) {
+		if err := head.CallID.Validator(); err != nil {
+			return err
+		}
+	}
+	if !reflect.DeepEqual(nil, head.Contact) {
+		if err := head.Contact.Validator(); err != nil {
+			return err
+		}
+	}
+	if !reflect.DeepEqual(nil, head.ContentLength) {
+		if err := head.ContentLength.Validator(); err != nil {
+			return err
+		}
+	}
+	if !reflect.DeepEqual(nil, head.ContentType) {
+		if err := head.ContentType.Validator(); err != nil {
+			return err
+		}
+	}
+	if !reflect.DeepEqual(nil, head.CSeq) {
+		if err := head.CSeq.Validator(); err != nil {
+			return err
+		}
+	}
+	if !reflect.DeepEqual(nil, head.Expires) {
+		if err := head.Expires.Validator(); err != nil {
+			return err
+		}
+	}
+	if !reflect.DeepEqual(nil, head.From) {
+		if err := head.From.Validator(); err != nil {
+			return err
+		}
+	}
+	if !reflect.DeepEqual(nil, head.MaxForwards) {
+		if err := head.MaxForwards.Validator(); err != nil {
+			return err
+		}
+	}
+	if !reflect.DeepEqual(nil, head.Route) {
+		if err := head.Route.Validator(); err != nil {
+			return err
+		}
+	}
+	if !reflect.DeepEqual(nil, head.To) {
+		if err := head.Route.Validator(); err != nil {
+			return err
+		}
+	}
+	if !reflect.DeepEqual(nil, head.UserAgent) {
+		if err := head.UserAgent.Validator(); err != nil {
+			return err
+		}
+	}
+	if !reflect.DeepEqual(nil, head.Via) {
+		if err := head.Via.Validator(); err != nil {
+			return err
+		}
+
+	}
+	if !reflect.DeepEqual(nil, head.WWWAuthenticate) {
+		if err := head.WWWAuthenticate.Validator(); err != nil {
+			return err
+		}
+	}
 	return nil
+}
+func (head *Header) String() string {
+	result := ""
+	return result
 }
