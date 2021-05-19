@@ -9,18 +9,18 @@ import (
 )
 
 type UserAgent struct {
-	Server string `json:"Server"`
+	server string // server
 }
 
 func (userAgent *UserAgent) SetServer(server string) {
-	userAgent.Server = server
+	userAgent.server = server
 }
 func (userAgent *UserAgent) GetServer() string {
-	return userAgent.Server
+	return userAgent.server
 }
 func NewUserAgent(server string) *UserAgent {
 	return &UserAgent{
-		Server: server,
+		server: server,
 	}
 }
 
@@ -29,7 +29,7 @@ func (userAgent *UserAgent) Raw() (string, error) {
 	if err := userAgent.Validator(); err != nil {
 		return result, err
 	}
-	result += fmt.Sprintf("User-Agent: %s", userAgent.Server)
+	result += fmt.Sprintf("User-Agent: %s", userAgent.server)
 	result += "\r\n"
 	return result, nil
 }
@@ -39,8 +39,6 @@ func (userAgent *UserAgent) Parse(raw string) error {
 	}
 	raw = regexp.MustCompile(`\r`).ReplaceAllString(raw, "")
 	raw = regexp.MustCompile(`\n`).ReplaceAllString(raw, "")
-	raw = strings.TrimLeft(raw, " ")
-	raw = strings.TrimRight(raw, " ")
 	raw = strings.TrimPrefix(raw, " ")
 	raw = strings.TrimSuffix(raw, " ")
 	if len(strings.TrimSpace(raw)) == 0 {
@@ -52,13 +50,11 @@ func (userAgent *UserAgent) Parse(raw string) error {
 		return errors.New("raw is not a user-agent header field")
 	}
 	raw = fieldRegexp.ReplaceAllString(raw, "")
-	raw = strings.TrimLeft(raw, " ")
-	raw = strings.TrimRight(raw, " ")
 	raw = strings.TrimPrefix(raw, " ")
 	raw = strings.TrimSuffix(raw, " ")
 
 	if len(strings.TrimSpace(raw)) > 0 {
-		userAgent.Server = raw
+		userAgent.server = raw
 	}
 	return userAgent.Validator()
 }
@@ -67,4 +63,11 @@ func (userAgent *UserAgent) Validator() error {
 		return errors.New("user-agent caller is not allowed to be nil")
 	}
 	return nil
+}
+func (userAgent *UserAgent) String() string {
+	result := ""
+	if len(strings.TrimSpace(userAgent.server)) > 0 {
+		result += userAgent.server
+	}
+	return result
 }

@@ -9,18 +9,18 @@ import (
 )
 
 type ContentType struct {
-	MediaType string `json:"Media-Type"`
+	mediaType string // media-type
 }
 
 func (contentType *ContentType) SetMediaType(mediaType string) {
-	contentType.MediaType = mediaType
+	contentType.mediaType = mediaType
 }
 func (contentType *ContentType) GetMediaType() string {
-	return contentType.MediaType
+	return contentType.mediaType
 }
 func NewContentType(mediaType string) *ContentType {
 	return &ContentType{
-		MediaType: mediaType,
+		mediaType: mediaType,
 	}
 }
 func (contentType *ContentType) Raw() (string, error) {
@@ -28,9 +28,7 @@ func (contentType *ContentType) Raw() (string, error) {
 	if err := contentType.Validator(); err != nil {
 		return result, err
 	}
-
-	result += fmt.Sprintf("Content-Type: %s", contentType.MediaType)
-
+	result += fmt.Sprintf("Content-Type: %s", contentType.mediaType)
 	result += "\r\n"
 	return result, nil
 }
@@ -54,7 +52,7 @@ func (contentType *ContentType) Parse(raw string) error {
 	raw = strings.TrimPrefix(raw, " ")
 	raw = strings.TrimSuffix(raw, " ")
 	if len(strings.TrimSpace(raw)) > 0 {
-		contentType.MediaType = raw
+		contentType.mediaType = raw
 	}
 	return contentType.Validator()
 }
@@ -62,8 +60,15 @@ func (contentType *ContentType) Validator() error {
 	if reflect.DeepEqual(nil, contentType) {
 		return errors.New("content-type caller is not allowed to be nil")
 	}
-	if len(strings.TrimSpace(contentType.MediaType)) == 0 {
+	if len(strings.TrimSpace(contentType.mediaType)) == 0 {
 		return errors.New("the media-type field is not allowed to be empty")
 	}
 	return nil
+}
+func (contentType *ContentType) String() string {
+	result := ""
+	if len(strings.TrimSpace(contentType.mediaType)) > 0 {
+		result += contentType.mediaType
+	}
+	return result
 }

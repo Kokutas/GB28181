@@ -9,7 +9,7 @@ import (
 )
 
 type Contact struct {
-	displayName string                 // Display-Name
+	displayName string                 // display-name
 	uri         *Uri                   // uri
 	extension   map[string]interface{} // extension
 }
@@ -24,19 +24,13 @@ func (contact *Contact) SetUri(uri *Uri) {
 	contact.uri = uri
 }
 func (contact *Contact) GetUri() *Uri {
-	if contact.uri != nil {
-		return contact.uri
-	}
-	return nil
+	return contact.uri
 }
 func (contact *Contact) SetExtension(extensions map[string]interface{}) {
 	contact.extension = extensions
 }
 func (contact *Contact) GetExtension() map[string]interface{} {
-	if contact.extension != nil {
-		return contact.extension
-	}
-	return nil
+	return contact.extension
 }
 
 func NewContact(displayName string, uri *Uri, extension map[string]interface{}) *Contact {
@@ -82,21 +76,17 @@ func (contact *Contact) Parse(raw string) error {
 	}
 	raw = regexp.MustCompile(`\r`).ReplaceAllString(raw, "")
 	raw = regexp.MustCompile(`\n`).ReplaceAllString(raw, "")
-	raw = strings.TrimLeft(raw, " ")
-	raw = strings.TrimRight(raw, " ")
 	raw = strings.TrimPrefix(raw, " ")
 	raw = strings.TrimSuffix(raw, " ")
 	if len(strings.TrimSpace(raw)) == 0 {
 		return errors.New("the raw parameter is not allowed to be empty")
 	}
 	// contact field regexp
-	contactFieldRegexp := regexp.MustCompile(`(?i)(contact).*?:`)
-	if !contactFieldRegexp.MatchString(raw) {
+	fieldRegexp := regexp.MustCompile(`(?i)(contact).*?:`)
+	if !fieldRegexp.MatchString(raw) {
 		return errors.New("raw is not a contact header field")
 	}
-	raw = contactFieldRegexp.ReplaceAllString(raw, "")
-	raw = strings.TrimLeft(raw, " ")
-	raw = strings.TrimRight(raw, " ")
+	raw = fieldRegexp.ReplaceAllString(raw, "")
 	raw = strings.TrimPrefix(raw, " ")
 	raw = strings.TrimSuffix(raw, " ")
 
@@ -106,8 +96,6 @@ func (contact *Contact) Parse(raw string) error {
 		m := make(map[string]interface{})
 		extension := extensionsRegexp.FindString(raw)
 		extension = regexp.MustCompile(`>`).ReplaceAllString(extension, "")
-		extension = strings.TrimLeft(extension, ";")
-		extension = strings.TrimRight(extension, ";")
 		extension = strings.TrimPrefix(extension, ";")
 		extension = strings.TrimSuffix(extension, ";")
 		extensions := strings.Split(extension, ";")
@@ -128,8 +116,6 @@ func (contact *Contact) Parse(raw string) error {
 		}
 	}
 	raw = extensionsRegexp.ReplaceAllString(raw, "")
-	raw = strings.TrimLeft(raw, " ")
-	raw = strings.TrimRight(raw, " ")
 	raw = strings.TrimPrefix(raw, " ")
 	raw = strings.TrimSuffix(raw, " ")
 
@@ -150,8 +136,6 @@ func (contact *Contact) Parse(raw string) error {
 	raw = regexp.MustCompile(`<`).ReplaceAllString(raw, "")
 	raw = regexp.MustCompile(`"`).ReplaceAllString(raw, "")
 	raw = regexp.MustCompile(`"`).ReplaceAllString(raw, "")
-	raw = strings.TrimLeft(raw, " ")
-	raw = strings.TrimRight(raw, " ")
 	raw = strings.TrimPrefix(raw, " ")
 	raw = strings.TrimSuffix(raw, " ")
 	// display name regexp
@@ -169,4 +153,31 @@ func (contact *Contact) Validator() error {
 		return fmt.Errorf("contact uri validator error : %s", err.Error())
 	}
 	return nil
+}
+func (contact *Contact) String() string {
+	result := ""
+	if len(strings.TrimSpace(contact.displayName)) > 0 {
+		result += fmt.Sprintf("\"%s\"", contact.displayName)
+	}
+	if !reflect.DeepEqual(nil, contact.uri) {
+		result += fmt.Sprintf(" %s", contact.uri.String())
+	}
+	if !reflect.DeepEqual(nil, contact.extension) {
+		extensions := ""
+		for k, v := range contact.extension {
+			if len(strings.TrimSpace(fmt.Sprintf("%v", v))) == 0 {
+				extensions += fmt.Sprintf(";%s", k)
+			} else {
+				extensions += fmt.Sprintf(";%s=%v", k, v)
+			}
+		}
+		if len(strings.TrimSpace(extensions)) > 0 {
+			if len(result) == 0 {
+				extensions = strings.TrimPrefix(extensions, ";")
+			}
+			result += extensions
+		}
+	}
+
+	return result
 }

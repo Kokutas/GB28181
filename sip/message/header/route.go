@@ -9,30 +9,27 @@ import (
 )
 
 type Route struct {
-	DisplayName string `json:"Display-Name"`
-	Uris        []*Uri `json:"Route URI"`
+	displayName string // display-name
+	uris        []*Uri // route uri
 }
 
 func (route *Route) SetDisplayName(displayName string) {
-	route.DisplayName = displayName
+	route.displayName = displayName
 }
 func (route *Route) GetDisplayName() string {
-	return route.DisplayName
+	return route.displayName
 }
 
 func (route *Route) SetUris(uris ...*Uri) {
-	route.Uris = append(route.Uris, uris...)
+	route.uris = append(route.uris, uris...)
 }
 func (route *Route) GetUris() []*Uri {
-	if len(route.Uris) > 0 {
-		return route.Uris
-	}
-	return nil
+	return route.uris
 }
 func NewRoute(displayName string, uris ...*Uri) *Route {
 	return &Route{
-		DisplayName: displayName,
-		Uris:        uris,
+		displayName: displayName,
+		uris:        uris,
 	}
 }
 
@@ -43,11 +40,11 @@ func (route *Route) Raw() (string, error) {
 	}
 	result += "Route:"
 	addQuoteTag := true
-	if len(strings.TrimSpace(route.DisplayName)) > 0 {
+	if len(strings.TrimSpace(route.displayName)) > 0 {
 		addQuoteTag = false
-		result += fmt.Sprintf(" \"%s\"", route.DisplayName)
+		result += fmt.Sprintf(" \"%s\"", route.displayName)
 	}
-	for _, uri := range route.Uris {
+	for _, uri := range route.uris {
 		uriStr, err := uri.Raw()
 		if err != nil {
 			return "", err
@@ -68,8 +65,6 @@ func (route *Route) Parse(raw string) error {
 	}
 	raw = regexp.MustCompile(`\r`).ReplaceAllString(raw, "")
 	raw = regexp.MustCompile(`\n`).ReplaceAllString(raw, "")
-	raw = strings.TrimLeft(raw, " ")
-	raw = strings.TrimRight(raw, " ")
 	raw = strings.TrimPrefix(raw, " ")
 	raw = strings.TrimSuffix(raw, " ")
 	if len(strings.TrimSpace(raw)) == 0 {
@@ -81,8 +76,6 @@ func (route *Route) Parse(raw string) error {
 		return errors.New("raw is not a route header field")
 	}
 	raw = fieldRegexp.ReplaceAllString(raw, "")
-	raw = strings.TrimLeft(raw, " ")
-	raw = strings.TrimRight(raw, " ")
 	raw = strings.TrimPrefix(raw, " ")
 	raw = strings.TrimSuffix(raw, " ")
 
@@ -93,26 +86,20 @@ func (route *Route) Parse(raw string) error {
 	displayNameStr = regexp.MustCompile(`<`).ReplaceAllString(displayNameStr, "")
 	displayNameStr = regexp.MustCompile(`>`).ReplaceAllString(displayNameStr, "")
 	displayNameStr = regexp.MustCompile(`"`).ReplaceAllString(displayNameStr, "")
-	displayNameStr = strings.TrimLeft(displayNameStr, " ")
-	displayNameStr = strings.TrimRight(displayNameStr, " ")
 	displayNameStr = strings.TrimPrefix(displayNameStr, " ")
 	displayNameStr = strings.TrimSuffix(displayNameStr, " ")
 	if len(strings.TrimSpace(displayNameStr)) > 0 {
-		route.DisplayName = displayNameStr
+		route.displayName = displayNameStr
 		raw = regexp.MustCompile(`.*`+displayNameStr).ReplaceAllString(raw, "")
 	}
-	raw = strings.TrimLeft(raw, " ")
-	raw = strings.TrimRight(raw, " ")
 	raw = strings.TrimPrefix(raw, " ")
 	raw = strings.TrimSuffix(raw, " ")
-	raw = strings.TrimLeft(raw, ",")
-	raw = strings.TrimRight(raw, ",")
 	raw = strings.TrimPrefix(raw, ",")
 	raw = strings.TrimSuffix(raw, ",")
 
 	if strings.Contains(raw, ",") {
 		rawSlice := strings.Split(raw, ",")
-		route.Uris = make([]*Uri, 0, len(rawSlice))
+		route.uris = make([]*Uri, 0, len(rawSlice))
 		for _, raws := range rawSlice {
 			raws = regexp.MustCompile(`<`).ReplaceAllString(raws, "")
 			raws = regexp.MustCompile(`>`).ReplaceAllString(raws, "")
@@ -120,18 +107,18 @@ func (route *Route) Parse(raw string) error {
 			if err := uri.Parse(raws); err != nil {
 				return err
 			}
-			route.Uris = append(route.Uris, uri)
+			route.uris = append(route.uris, uri)
 		}
 
 	} else {
 		raw = regexp.MustCompile(`<`).ReplaceAllString(raw, "")
 		raw = regexp.MustCompile(`>`).ReplaceAllString(raw, "")
-		route.Uris = make([]*Uri, 0, 1)
+		route.uris = make([]*Uri, 0, 1)
 		uri := new(Uri)
 		if err := uri.Parse(raw); err != nil {
 			return err
 		}
-		route.Uris = append(route.Uris, uri)
+		route.uris = append(route.uris, uri)
 	}
 
 	return route.Validator()
@@ -140,11 +127,33 @@ func (route *Route) Validator() error {
 	if reflect.DeepEqual(nil, route) {
 		return errors.New("route caller is not allowed to be nil")
 	}
-	if reflect.DeepEqual(nil, route.Uris) {
+	if reflect.DeepEqual(nil, route.uris) {
 		return errors.New("the uris field is not allowed to be nil")
 	}
-	if len(route.Uris) == 0 {
+	if len(route.uris) == 0 {
 		return errors.New("the uris field must has one uri")
 	}
 	return nil
+}
+
+func (route *Route) String() string {
+	result := ""
+	if len(strings.TrimSpace(route.displayName)) > 0 {
+		result += fmt.Sprintf("\"%s\"", route.displayName)
+		if !reflect.DeepEqual(nil, route.uris) {
+			for _, uri := range route.uris {
+				result += fmt.Sprintf("%s,", uri.String())
+			}
+			result = strings.TrimSuffix(result, ",")
+		}
+	} else {
+		if !reflect.DeepEqual(nil, route.uris) {
+			for _, uri := range route.uris {
+				result += fmt.Sprintf("<%s>,", uri.String())
+			}
+			result = strings.TrimSuffix(result, ",")
+		}
+	}
+
+	return result
 }

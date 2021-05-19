@@ -51,21 +51,17 @@ func (callId *CallID) Parse(raw string) error {
 	}
 	raw = regexp.MustCompile(`\r`).ReplaceAllString(raw, "")
 	raw = regexp.MustCompile(`\n`).ReplaceAllString(raw, "")
-	raw = strings.TrimLeft(raw, " ")
-	raw = strings.TrimRight(raw, " ")
 	raw = strings.TrimPrefix(raw, " ")
 	raw = strings.TrimSuffix(raw, " ")
 	if len(strings.TrimSpace(raw)) == 0 {
 		return errors.New("the raw parameter is not allowed to be empty")
 	}
 	// call-id field regexp
-	callIdFieldRegexp := regexp.MustCompile(`(?i)(call-id).*?:`)
-	if !callIdFieldRegexp.MatchString(raw) {
+	fieldRegexp := regexp.MustCompile(`(?i)(call-id).*?:`)
+	if !fieldRegexp.MatchString(raw) {
 		return errors.New("raw is not a call-id header field")
 	}
-	raw = callIdFieldRegexp.ReplaceAllString(raw, "")
-	raw = strings.TrimLeft(raw, " ")
-	raw = strings.TrimRight(raw, " ")
+	raw = fieldRegexp.ReplaceAllString(raw, "")
 	raw = strings.TrimPrefix(raw, " ")
 	raw = strings.TrimSuffix(raw, " ")
 	// host regexp
@@ -85,4 +81,18 @@ func (callId *CallID) Validator() error {
 		return errors.New("the id field is not allowed to be empty")
 	}
 	return nil
+}
+func (callId *CallID) String() string {
+	result := ""
+	if len(strings.TrimSpace(callId.id)) > 0 {
+		result += callId.id
+	}
+	if len(strings.TrimSpace(callId.host)) > 0 {
+		if len(result) > 0 {
+			result += fmt.Sprintf("@%s", callId.host)
+		} else {
+			result += callId.host
+		}
+	}
+	return result
 }

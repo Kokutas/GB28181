@@ -11,75 +11,75 @@ import (
 )
 
 type Via struct {
-	Schema        string  `json:"Schema"`
-	Version       float64 `json:"Version"`
-	Transport     string  `json:"Transport"`
-	SentByAddress string  `json:"Sent-by Address"`
-	SentByPort    uint16  `json:"Sent-by port"`
-	RPort         uint16  `json:"RPort"`
-	Branch        string  `json:"Branch"`
-	Received      string  `json:"Received"`
+	schema        string  // schema
+	version       float64 // version
+	transport     string  // transport
+	sentByAddress string  // Sent-by Address
+	sentByPort    uint16  // Sent-by port
+	rport         uint16  // rport
+	branch        string  // branch
+	received      string  // received
 }
 
 func (via *Via) SetSchema(schema string) {
-	via.Schema = schema
+	via.schema = schema
 }
 func (via *Via) GetSchema() string {
-	return via.Schema
+	return via.schema
 }
 func (via *Via) SetVersion(version float64) {
-	via.Version = version
+	via.version = version
 }
 func (via *Via) GetVersion() float64 {
-	return via.Version
+	return via.version
 }
 func (via *Via) SetTransport(transport string) {
-	via.Transport = transport
+	via.transport = transport
 }
 func (via *Via) GetTransport() string {
-	return via.Transport
+	return via.transport
 }
 
 func (via *Via) SetSentByAddress(sentByAddress string) {
-	via.SentByAddress = sentByAddress
+	via.sentByAddress = sentByAddress
 }
 func (via *Via) GetSentByAddress() string {
-	return via.SentByAddress
+	return via.sentByAddress
 }
 func (via *Via) SetSentByPort(sentByPort uint16) {
-	via.SentByPort = sentByPort
+	via.sentByPort = sentByPort
 }
 func (via *Via) GetSentByPort() uint16 {
-	return via.SentByPort
+	return via.sentByPort
 }
 func (via *Via) SetRPort(rPort uint16) {
-	via.RPort = rPort
+	via.rport = rPort
 }
 func (via *Via) GetRPort() uint16 {
-	return via.RPort
+	return via.rport
 }
 func (via *Via) SetBranch(branch string) {
-	via.Branch = branch
+	via.branch = branch
 }
 func (via *Via) GetBranch() string {
-	return via.Branch
+	return via.branch
 }
 func (via *Via) SetReceived(received string) {
-	via.Received = received
+	via.received = received
 }
 func (via *Via) GetReceived() string {
-	return via.Received
+	return via.received
 }
 func NewVia(schema string, version float64, transport string, sentByAddress string, sentByPort uint16, rPort uint16, branch string, received string) *Via {
 	return &Via{
-		Schema:        schema,
-		Version:       version,
-		Transport:     transport,
-		SentByAddress: sentByAddress,
-		SentByPort:    sentByPort,
-		RPort:         rPort,
-		Branch:        branch,
-		Received:      received,
+		schema:        schema,
+		version:       version,
+		transport:     transport,
+		sentByAddress: sentByAddress,
+		sentByPort:    sentByPort,
+		rport:         rPort,
+		branch:        branch,
+		received:      received,
 	}
 }
 func (via *Via) Raw() (string, error) {
@@ -87,18 +87,18 @@ func (via *Via) Raw() (string, error) {
 	if err := via.Validator(); err != nil {
 		return result, err
 	}
-	result += fmt.Sprintf("Via: %s/%1.1f/%s", strings.ToUpper(via.Schema), via.Version, strings.ToUpper(via.Transport))
-	if ip := net.ParseIP(via.SentByAddress); ip != nil {
-		result += fmt.Sprintf(" %s:%d", via.SentByAddress, via.SentByPort)
+	result += fmt.Sprintf("Via: %s/%1.1f/%s", strings.ToUpper(via.schema), via.version, strings.ToUpper(via.transport))
+	if ip := net.ParseIP(via.sentByAddress); ip != nil {
+		result += fmt.Sprintf(" %s:%d", via.sentByAddress, via.sentByPort)
 	} else {
-		result += fmt.Sprintf(" %s", via.SentByAddress)
+		result += fmt.Sprintf(" %s", via.sentByAddress)
 	}
-	if via.RPort == 1 {
-		result += fmt.Sprintf(";%s;branch=%s", "rport", via.Branch)
-	} else if via.RPort > 1 {
-		result += fmt.Sprintf(";rport=%d;branch=%s;received=%s", via.RPort, via.Branch, via.Received)
+	if via.rport == 1 {
+		result += fmt.Sprintf(";%s;branch=%s", "rport", via.branch)
+	} else if via.rport > 1 {
+		result += fmt.Sprintf(";rport=%d;branch=%s;received=%s", via.rport, via.branch, via.received)
 	} else {
-		result += fmt.Sprintf(";branch=%s", via.Branch)
+		result += fmt.Sprintf(";branch=%s", via.branch)
 	}
 	result += "\r\n"
 	return result, nil
@@ -109,8 +109,6 @@ func (via *Via) Parse(raw string) error {
 	}
 	raw = regexp.MustCompile(`\r`).ReplaceAllString(raw, "")
 	raw = regexp.MustCompile(`\n`).ReplaceAllString(raw, "")
-	raw = strings.TrimLeft(raw, " ")
-	raw = strings.TrimRight(raw, " ")
 	raw = strings.TrimPrefix(raw, " ")
 	raw = strings.TrimSuffix(raw, " ")
 	if len(strings.TrimSpace(raw)) == 0 {
@@ -122,8 +120,6 @@ func (via *Via) Parse(raw string) error {
 		return errors.New("raw is not a via header field")
 	}
 	raw = fieldRegexp.ReplaceAllString(raw, "")
-	raw = strings.TrimLeft(raw, " ")
-	raw = strings.TrimRight(raw, " ")
 	raw = strings.TrimPrefix(raw, " ")
 	raw = strings.TrimSuffix(raw, " ")
 	// schema/version/transport regexp
@@ -136,7 +132,7 @@ func (via *Via) Parse(raw string) error {
 	if !schemaRegexp.MatchString(schemaAndVersionAndTransportRegexp.FindString(raw)) {
 		return errors.New("the values of the schema field cannot match")
 	}
-	via.Schema = strings.ToUpper(schemaRegexp.FindString(schemaAndVersionAndTransportRegexp.FindString(raw)))
+	via.schema = strings.ToUpper(schemaRegexp.FindString(schemaAndVersionAndTransportRegexp.FindString(raw)))
 	// version regexp
 	versionRegexp := regexp.MustCompile(`2\.0`)
 	if !versionRegexp.MatchString(schemaAndVersionAndTransportRegexp.FindString(raw)) {
@@ -147,27 +143,21 @@ func (via *Via) Parse(raw string) error {
 	if err != nil {
 		return err
 	}
-	via.Version = version
+	via.version = version
 	// transport regexp
 	transportRegexp := regexp.MustCompile(`(?i)(udp|tcp)`)
 	if !transportRegexp.MatchString(schemaAndVersionAndTransportRegexp.FindString(raw)) {
 		return errors.New("the value of the transport field cannot match")
 	}
-	via.Transport = strings.ToUpper(transportRegexp.FindString(schemaAndVersionAndTransportRegexp.FindString(raw)))
+	via.transport = strings.ToUpper(transportRegexp.FindString(schemaAndVersionAndTransportRegexp.FindString(raw)))
 	raw = schemaAndVersionAndTransportRegexp.ReplaceAllString(raw, "")
-	raw = strings.TrimLeft(raw, " ")
-	raw = strings.TrimRight(raw, " ")
 	raw = strings.TrimPrefix(raw, " ")
 	raw = strings.TrimSuffix(raw, " ")
 	if len(strings.TrimSpace(raw)) == 0 {
 		return errors.New("the sent-by data cannot be parsed")
 	}
-	raw = strings.TrimLeft(raw, ";")
-	raw = strings.TrimRight(raw, ";")
 	raw = strings.TrimPrefix(raw, ";")
 	raw = strings.TrimSuffix(raw, ";")
-	raw = strings.TrimLeft(raw, " ")
-	raw = strings.TrimRight(raw, " ")
 	raw = strings.TrimPrefix(raw, " ")
 	raw = strings.TrimSuffix(raw, " ")
 	// port regexp
@@ -189,9 +179,9 @@ func (via *Via) Parse(raw string) error {
 				if err != nil {
 					return err
 				}
-				via.SentByPort = uint16(port)
+				via.sentByPort = uint16(port)
 			}
-			via.SentByAddress = portRegexp.ReplaceAllString(raws, "")
+			via.sentByAddress = portRegexp.ReplaceAllString(raws, "")
 			continue
 		}
 		switch {
@@ -200,22 +190,22 @@ func (via *Via) Parse(raw string) error {
 			rPorts := regexp.MustCompile(`(?i)(rport)`).ReplaceAllString(rPortRegexp.FindString(raws), "")
 			rPorts = regexp.MustCompile(`=`).ReplaceAllString(rPorts, "")
 			if len(strings.TrimSpace(rPorts)) == 0 {
-				via.RPort = 1
+				via.rport = 1
 			} else {
 				rport, err := strconv.Atoi(rPorts)
 				if err != nil {
 					return err
 				}
-				via.RPort = uint16(rport)
+				via.rport = uint16(rport)
 			}
 		// branch
 		case branchRegexp.MatchString(raws):
 			branchs := regexp.MustCompile(`(?i)(branch)`).ReplaceAllString(branchRegexp.FindString(raws), "")
-			via.Branch = regexp.MustCompile(`=`).ReplaceAllString(branchs, "")
+			via.branch = regexp.MustCompile(`=`).ReplaceAllString(branchs, "")
 		// received
 		case receivedRegexp.MatchString(raws):
 			receivedStr := regexp.MustCompile(`(?i)(received)`).ReplaceAllString(receivedRegexp.FindString(raws), "")
-			via.Received = regexp.MustCompile(`=`).ReplaceAllString(receivedStr, "")
+			via.received = regexp.MustCompile(`=`).ReplaceAllString(receivedStr, "")
 		default:
 			// other
 			if strings.Contains(raws, "=") {
@@ -229,36 +219,66 @@ func (via *Via) Validator() error {
 	if reflect.DeepEqual(nil, via) {
 		return errors.New("via caller is not allowed to be nil")
 	}
-	if len(strings.TrimSpace(via.Schema)) == 0 {
+	if len(strings.TrimSpace(via.schema)) == 0 {
 		return errors.New("the schema field is not allowed to be empty")
 	}
-	if !regexp.MustCompile(`(?i)(sip)$`).MatchString(via.Schema) {
+	if !regexp.MustCompile(`(?i)(sip)$`).MatchString(via.schema) {
 		return errors.New("the value of the schema field must be sip")
 	}
-	if via.Version != 2.0 {
+	if via.version != 2.0 {
 		return errors.New("the value of the version field must be 2.0")
 	}
-	if len(strings.TrimSpace(via.Transport)) == 0 {
+	if len(strings.TrimSpace(via.transport)) == 0 {
 		return errors.New("the transport field is not allowed to be empty")
 	}
-	if !regexp.MustCompile(`(?i)(udp|tcp)$`).MatchString(via.Transport) {
+	if !regexp.MustCompile(`(?i)(udp|tcp)$`).MatchString(via.transport) {
 		return errors.New("the value of the transport field must be udp or tcp")
 	}
-	if len(strings.TrimSpace(via.SentByAddress)) == 0 {
+	if len(strings.TrimSpace(via.sentByAddress)) == 0 {
 		return errors.New("the sent-by address field is not allowed to be empty")
 	}
-	if ip := net.ParseIP(via.SentByAddress); ip != nil {
-		if via.SentByPort == 0 {
+	if ip := net.ParseIP(via.sentByAddress); ip != nil {
+		if via.sentByPort == 0 {
 			return errors.New("the sent-by address field gives the ip address, the sent-by port must be given")
 		}
 	}
-	if via.RPort > 1 {
-		if len(strings.TrimSpace(via.Received)) == 0 {
+	if via.rport > 1 {
+		if len(strings.TrimSpace(via.received)) == 0 {
 			return errors.New("the rport field gives the response port value, the receive must be given")
 		}
 	}
-	if len(strings.TrimSpace(via.Branch)) == 0 {
+	if len(strings.TrimSpace(via.branch)) == 0 {
 		return errors.New("the branch field is not allowed to be empty")
 	}
 	return nil
+}
+
+func (via *Via) String() string {
+	result := ""
+	if len(strings.TrimSpace(via.schema)) > 0 {
+		result += fmt.Sprintf("%s/%1.1f", strings.ToUpper(via.schema), via.version)
+	} else {
+		result += fmt.Sprintf("%1.1f", via.version)
+	}
+	if len(strings.TrimSpace(via.transport)) > 0 {
+		result += fmt.Sprintf("/%s", strings.ToUpper(via.transport))
+	}
+	if len(strings.TrimSpace(via.sentByAddress)) > 0 {
+		result += fmt.Sprintf(" %s", via.sentByAddress)
+	}
+	if via.sentByPort > 0 {
+		result += fmt.Sprintf(":%d", via.sentByPort)
+	}
+	if via.rport == 1 {
+		result += fmt.Sprintf(";rport")
+	} else if via.rport > 1 {
+		result += fmt.Sprintf(";rport=%d", via.rport)
+	}
+	if len(strings.TrimSpace(via.branch)) > 0 {
+		result += fmt.Sprintf(";branch=%s", via.branch)
+	}
+	if len(strings.TrimSpace(via.received)) > 0 {
+		result += fmt.Sprintf(";received=%s", via.received)
+	}
+	return result
 }

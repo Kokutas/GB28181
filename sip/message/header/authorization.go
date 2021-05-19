@@ -47,10 +47,7 @@ func (authorization *Authorization) SetUri(uri *Uri) {
 	authorization.uri = uri
 }
 func (authorization *Authorization) GetUri() *Uri {
-	if authorization.uri != nil {
-		return authorization.uri
-	}
-	return nil
+	return authorization.uri
 }
 func (authorization *Authorization) SetResponse(response string) {
 	authorization.response = response
@@ -96,8 +93,6 @@ func (authorization *Authorization) Parse(raw string) error {
 	}
 	raw = regexp.MustCompile(`\r`).ReplaceAllString(raw, "")
 	raw = regexp.MustCompile(`\n`).ReplaceAllString(raw, "")
-	raw = strings.TrimLeft(raw, " ")
-	raw = strings.TrimRight(raw, " ")
 	raw = strings.TrimPrefix(raw, " ")
 	raw = strings.TrimSuffix(raw, " ")
 	if len(strings.TrimSpace(raw)) == 0 {
@@ -109,19 +104,14 @@ func (authorization *Authorization) Parse(raw string) error {
 		return errors.New("raw is not a authorization header field")
 	}
 	raw = fieldRegexp.ReplaceAllString(raw, "")
-	raw = strings.TrimLeft(raw, " ")
-	raw = strings.TrimRight(raw, " ")
 	raw = strings.TrimPrefix(raw, " ")
 	raw = strings.TrimSuffix(raw, " ")
-
 	// auth schema regexp
 	authSchemaRegexp := regexp.MustCompile(`(?i)(digest|basic)`)
 	if authSchemaRegexp.MatchString(raw) {
 		authorization.authSchema = authSchemaRegexp.FindString(raw)
 	}
 	raw = authSchemaRegexp.ReplaceAllString(raw, "")
-	raw = strings.TrimLeft(raw, " ")
-	raw = strings.TrimRight(raw, " ")
 	raw = strings.TrimPrefix(raw, " ")
 	raw = strings.TrimSuffix(raw, " ")
 	// username regexp
@@ -136,8 +126,6 @@ func (authorization *Authorization) Parse(raw string) error {
 	responseRegexp := regexp.MustCompile(`(?i)(response).*?=`)
 	// algorithm regexp
 	algorithmRegexp := regexp.MustCompile(`(?i)(algorithm).*?=`)
-	raw = strings.TrimLeft(raw, ",")
-	raw = strings.TrimRight(raw, ",")
 	raw = strings.TrimPrefix(raw, ",")
 	raw = strings.TrimSuffix(raw, ",")
 	rawSlice := strings.Split(raw, ",")
@@ -194,4 +182,54 @@ func (authorization *Authorization) Validator() error {
 		return errors.New("the value of the algorithm field must be MD5")
 	}
 	return nil
+}
+
+func (authorization *Authorization) String() string {
+	result := ""
+	if len(strings.TrimSpace(authorization.authSchema)) > 0 {
+		result += fmt.Sprintf("%s", strings.Title(authorization.authSchema))
+	}
+	if len(strings.TrimSpace(authorization.username)) > 0 {
+		if len(result) > 0 {
+			result += fmt.Sprintf(",username=\"%s\"", authorization.username)
+		} else {
+			result += fmt.Sprintf("username=\"%s\"", authorization.username)
+		}
+	}
+	if len(strings.TrimSpace(authorization.realm)) > 0 {
+		if len(result) > 0 {
+			result += fmt.Sprintf(",realm=\"%s\"", authorization.realm)
+		} else {
+			result += fmt.Sprintf("realm=\"%s\"", authorization.realm)
+		}
+	}
+	if len(strings.TrimSpace(authorization.nonce)) > 0 {
+		if len(result) > 0 {
+			result += fmt.Sprintf(",nonce=\"%s\"", authorization.nonce)
+		} else {
+			result += fmt.Sprintf("nonce=\"%s\"", authorization.nonce)
+		}
+	}
+	if !reflect.DeepEqual(nil, authorization.uri) {
+		if len(result) > 0 {
+			result += fmt.Sprintf(",uri=\"%s\"", authorization.uri.String())
+		} else {
+			result += fmt.Sprintf("uri=\"%s\"", authorization.uri.String())
+		}
+	}
+	if len(strings.TrimSpace(authorization.response)) > 0 {
+		if len(result) > 0 {
+			result += fmt.Sprintf(",response=\"%s\"", authorization.response)
+		} else {
+			result += fmt.Sprintf("response=\"%s\"", authorization.response)
+		}
+	}
+	if len(strings.TrimSpace(authorization.algorithm)) > 0 {
+		if len(result) > 0 {
+			result += fmt.Sprintf(",algorithm=%s", strings.ToUpper(authorization.algorithm))
+		} else {
+			result += fmt.Sprintf("algorithm=%s", strings.ToUpper(authorization.algorithm))
+		}
+	}
+	return result
 }

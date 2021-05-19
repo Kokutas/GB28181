@@ -9,38 +9,35 @@ import (
 )
 
 type To struct {
-	DisplayName string `json:"Display-Name"`
-	Address     *Uri   `json:"SIP to Address"`
-	Tag         string `json:"SIP to Tag"`
+	displayName string // display-name
+	address     *Uri   // SIP to Address
+	tag         string // SIP to Tag
 }
 
 func (to *To) SetDisplayName(displayName string) {
-	to.DisplayName = displayName
+	to.displayName = displayName
 }
 func (to *To) GetDisplayName() string {
-	return to.DisplayName
+	return to.displayName
 }
 func (to *To) SetAddress(address *Uri) {
-	to.Address = address
+	to.address = address
 }
 func (to *To) GetAddress() *Uri {
-	if to.Address != nil {
-		return to.Address
-	}
-	return nil
+	return to.address
 }
 func (to *To) SetTag(tag string) {
-	to.Tag = tag
+	to.tag = tag
 }
 func (to *To) GetTag() string {
-	return to.Tag
+	return to.tag
 }
 
 func NewTo(displayName string, address *Uri, tag string) *To {
 	return &To{
-		DisplayName: displayName,
-		Address:     address,
-		Tag:         tag,
+		displayName: displayName,
+		address:     address,
+		tag:         tag,
 	}
 }
 func (to *To) Raw() (string, error) {
@@ -48,17 +45,17 @@ func (to *To) Raw() (string, error) {
 	if err := to.Validator(); err != nil {
 		return result, err
 	}
-	address, err := to.Address.Raw()
+	address, err := to.address.Raw()
 	if err != nil {
 		return result, err
 	}
-	if len(strings.TrimSpace(to.DisplayName)) == 0 {
+	if len(strings.TrimSpace(to.displayName)) == 0 {
 		result += fmt.Sprintf("To: <%s>", address)
 	} else {
-		result += fmt.Sprintf("To: \"%s\" %s", to.DisplayName, address)
+		result += fmt.Sprintf("To: \"%s\" %s", to.displayName, address)
 	}
-	if len(strings.TrimSpace(to.Tag)) > 0 {
-		result += fmt.Sprintf(";tag=%s", to.Tag)
+	if len(strings.TrimSpace(to.tag)) > 0 {
+		result += fmt.Sprintf(";tag=%s", to.tag)
 	}
 	result += "\r\n"
 	return result, nil
@@ -69,8 +66,6 @@ func (to *To) Parse(raw string) error {
 	}
 	raw = regexp.MustCompile(`\r`).ReplaceAllString(raw, "")
 	raw = regexp.MustCompile(`\n`).ReplaceAllString(raw, "")
-	raw = strings.TrimLeft(raw, " ")
-	raw = strings.TrimRight(raw, " ")
 	raw = strings.TrimPrefix(raw, " ")
 	raw = strings.TrimSuffix(raw, " ")
 	if len(strings.TrimSpace(raw)) == 0 {
@@ -82,8 +77,6 @@ func (to *To) Parse(raw string) error {
 		return errors.New("raw is not a to header field")
 	}
 	raw = fieldRegexp.ReplaceAllString(raw, "")
-	raw = strings.TrimLeft(raw, " ")
-	raw = strings.TrimRight(raw, " ")
 	raw = strings.TrimPrefix(raw, " ")
 	raw = strings.TrimSuffix(raw, " ")
 	// address and tag regexp
@@ -95,31 +88,25 @@ func (to *To) Parse(raw string) error {
 	displayNameStr = regexp.MustCompile(`<`).ReplaceAllString(displayNameStr, "")
 	displayNameStr = regexp.MustCompile(`>`).ReplaceAllString(displayNameStr, "")
 	displayNameStr = regexp.MustCompile(`"`).ReplaceAllString(displayNameStr, "")
-	displayNameStr = strings.TrimLeft(displayNameStr, " ")
-	displayNameStr = strings.TrimRight(displayNameStr, " ")
 	displayNameStr = strings.TrimPrefix(displayNameStr, " ")
 	displayNameStr = strings.TrimSuffix(displayNameStr, " ")
 	if len(strings.TrimSpace(displayNameStr)) > 0 {
-		to.DisplayName = displayNameStr
+		to.displayName = displayNameStr
 	}
 	if addressAndTagRegexp.MatchString(raw) {
 		addressAndTag := addressAndTagRegexp.FindString(raw)
 		if tagRegexp.MatchString(addressAndTag) {
-			to.Tag = regexp.MustCompile(`(?i)(tag)=`).ReplaceAllString(tagRegexp.FindString(addressAndTag), "")
+			to.tag = regexp.MustCompile(`(?i)(tag)=`).ReplaceAllString(tagRegexp.FindString(addressAndTag), "")
 			addressAndTag = tagRegexp.ReplaceAllString(addressAndTag, "")
 		}
 		addressAndTag = regexp.MustCompile(`<`).ReplaceAllString(addressAndTag, "")
 		addressAndTag = regexp.MustCompile(`>`).ReplaceAllString(addressAndTag, "")
-		addressAndTag = strings.TrimLeft(addressAndTag, ";")
-		addressAndTag = strings.TrimRight(addressAndTag, ";")
 		addressAndTag = strings.TrimPrefix(addressAndTag, ";")
 		addressAndTag = strings.TrimSuffix(addressAndTag, ";")
-		addressAndTag = strings.TrimLeft(addressAndTag, " ")
-		addressAndTag = strings.TrimRight(addressAndTag, " ")
 		addressAndTag = strings.TrimPrefix(addressAndTag, " ")
 		addressAndTag = strings.TrimSuffix(addressAndTag, " ")
-		to.Address = new(Uri)
-		if err := to.Address.Parse(addressAndTag); err != nil {
+		to.address = new(Uri)
+		if err := to.address.Parse(addressAndTag); err != nil {
 			return err
 		}
 	}
@@ -130,8 +117,34 @@ func (to *To) Validator() error {
 	if reflect.DeepEqual(nil, to) {
 		return errors.New("to caller is not allowed to be nil")
 	}
-	if err := to.Address.Validator(); err != nil {
+	if err := to.address.Validator(); err != nil {
 		return fmt.Errorf("to address validator error : %s", err.Error())
 	}
 	return nil
+}
+func (to *To) String() string {
+	result := ""
+	if len(strings.TrimSpace(to.displayName)) > 0 {
+		result += fmt.Sprintf(" \"%s\"", to.displayName)
+		if !reflect.DeepEqual(nil, to.address) {
+			if len(result) > 0 {
+				result += fmt.Sprintf(" %s", to.address.String())
+			}
+		}
+	} else {
+		if !reflect.DeepEqual(nil, to.address) {
+			if len(result) > 0 {
+				result += fmt.Sprintf("<%s>", to.address.String())
+			}
+		}
+	}
+
+	if len(strings.TrimSpace(to.tag)) > 0 {
+		if len(result) > 0 {
+			result += fmt.Sprintf(";tag=%s", to.tag)
+		} else {
+			result += fmt.Sprintf("tag=%s", to.tag)
+		}
+	}
+	return result
 }

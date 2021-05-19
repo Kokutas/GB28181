@@ -1,7 +1,6 @@
 package header
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
 	"testing"
@@ -9,11 +8,7 @@ import (
 
 func TestNewContact(t *testing.T) {
 	contact := NewContact("", NewUri("sip", "34020000001320000001", "192.168.0.108", 5060, nil), nil)
-	data, err := json.Marshal(contact)
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Printf("%s\r\n", data)
+	fmt.Println(contact.GetUri().String())
 }
 
 func TestContact_Raw(t *testing.T) {

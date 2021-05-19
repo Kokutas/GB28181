@@ -1,7 +1,6 @@
 package header
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
 	"testing"
@@ -9,11 +8,7 @@ import (
 
 func TestNewCallID(t *testing.T) {
 	callId := NewCallID("140a92f15c94d76d62a4fcd2d3558000", "192.168.0.26")
-	data, err := json.Marshal(callId)
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Printf("%s\r\n", data)
+	fmt.Println(callId.GetHost())
 }
 
 func TestCallID_Raw(t *testing.T) {

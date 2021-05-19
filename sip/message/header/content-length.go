@@ -10,20 +10,20 @@ import (
 )
 
 type ContentLength struct {
-	Length uint `json:"Body-Content-Length"`
+	length uint // body-content-length
 }
 
 func (contentLength *ContentLength) SetLength(length uint) {
-	contentLength.Length = length
+	contentLength.length = length
 }
 
 func (contentLength *ContentLength) GetLength() uint {
-	return contentLength.Length
+	return contentLength.length
 }
 
 func NewContentLength(length uint) *ContentLength {
 	return &ContentLength{
-		Length: length,
+		length: length,
 	}
 }
 func (contentLength *ContentLength) Raw() (string, error) {
@@ -31,7 +31,7 @@ func (contentLength *ContentLength) Raw() (string, error) {
 	if err := contentLength.Validator(); err != nil {
 		return result, err
 	}
-	result += fmt.Sprintf("Content-Length: %d", contentLength.Length)
+	result += fmt.Sprintf("Content-Length: %d", contentLength.length)
 	result += "\r\n"
 	return result, nil
 }
@@ -41,16 +41,14 @@ func (contentLength *ContentLength) Parse(raw string) error {
 	}
 	raw = regexp.MustCompile(`\r`).ReplaceAllString(raw, "")
 	raw = regexp.MustCompile(`\n`).ReplaceAllString(raw, "")
-	raw = strings.TrimLeft(raw, " ")
-	raw = strings.TrimRight(raw, " ")
 	raw = strings.TrimPrefix(raw, " ")
 	raw = strings.TrimSuffix(raw, " ")
 	if len(strings.TrimSpace(raw)) == 0 {
 		return errors.New("the raw parameter is not allowed to be empty")
 	}
 	// content-length field regexp
-	contactFieldRegexp := regexp.MustCompile(`(?i)(content-length).*?:`)
-	if !contactFieldRegexp.MatchString(raw) {
+	fieldRegexp := regexp.MustCompile(`(?i)(content-length).*?:`)
+	if !fieldRegexp.MatchString(raw) {
 		return errors.New("raw is not a content-length header field")
 	}
 	// length regexp
@@ -61,7 +59,7 @@ func (contentLength *ContentLength) Parse(raw string) error {
 		if err != nil {
 			return err
 		}
-		contentLength.Length = uint(length)
+		contentLength.length = uint(length)
 	}
 
 	return contentLength.Validator()
@@ -71,4 +69,10 @@ func (contentLength *ContentLength) Validator() error {
 		return errors.New("content-length caller is not allowed to be nil")
 	}
 	return nil
+}
+
+func (contentLength *ContentLength) String() string {
+	result := ""
+	result += fmt.Sprintf("%d", contentLength.length)
+	return result
 }

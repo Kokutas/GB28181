@@ -10,18 +10,18 @@ import (
 )
 
 type Expires struct {
-	Seconds uint `json:"Seconds"`
+	seconds uint // seconds
 }
 
 func (expires *Expires) SetSeconds(seconds uint) {
-	expires.Seconds = seconds
+	expires.seconds = seconds
 }
 func (expires *Expires) GetSeconds() uint {
-	return expires.Seconds
+	return expires.seconds
 }
 func NewExpires(seconds uint) *Expires {
 	return &Expires{
-		Seconds: seconds,
+		seconds: seconds,
 	}
 }
 
@@ -30,7 +30,7 @@ func (expires *Expires) Raw() (string, error) {
 	if err := expires.Validator(); err != nil {
 		return result, err
 	}
-	result += fmt.Sprintf("Expires: %d", expires.Seconds)
+	result += fmt.Sprintf("Expires: %d", expires.seconds)
 	result += "\r\n"
 	return result, nil
 }
@@ -41,21 +41,17 @@ func (expires *Expires) Parse(raw string) error {
 	}
 	raw = regexp.MustCompile(`\r`).ReplaceAllString(raw, "")
 	raw = regexp.MustCompile(`\n`).ReplaceAllString(raw, "")
-	raw = strings.TrimLeft(raw, " ")
-	raw = strings.TrimRight(raw, " ")
 	raw = strings.TrimPrefix(raw, " ")
 	raw = strings.TrimSuffix(raw, " ")
 	if len(strings.TrimSpace(raw)) == 0 {
 		return errors.New("the raw parameter is not allowed to be empty")
 	}
 	// expires field regexp
-	expiresFieldRegexp := regexp.MustCompile(`(?i)(expires).*?:`)
-	if !expiresFieldRegexp.MatchString(raw) {
+	fieldRegexp := regexp.MustCompile(`(?i)(expires).*?:`)
+	if !fieldRegexp.MatchString(raw) {
 		return errors.New("raw is not a expires header field")
 	}
-	raw = expiresFieldRegexp.ReplaceAllString(raw, "")
-	raw = strings.TrimLeft(raw, " ")
-	raw = strings.TrimRight(raw, " ")
+	raw = fieldRegexp.ReplaceAllString(raw, "")
 	raw = strings.TrimPrefix(raw, " ")
 	raw = strings.TrimSuffix(raw, " ")
 
@@ -67,7 +63,7 @@ func (expires *Expires) Parse(raw string) error {
 		if err != nil {
 			return err
 		}
-		expires.Seconds = uint(second)
+		expires.seconds = uint(second)
 	}
 	return nil
 }
@@ -76,4 +72,9 @@ func (expires *Expires) Validator() error {
 		return errors.New("expires caller is not allowed to be nil")
 	}
 	return nil
+}
+func (expires *Expires) String() string {
+	result := ""
+	result += fmt.Sprintf("%d", expires.seconds)
+	return result
 }

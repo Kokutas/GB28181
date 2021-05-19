@@ -9,38 +9,35 @@ import (
 )
 
 type From struct {
-	DisplayName string `json:"Display-Name"`
-	Address     *Uri   `json:"SIP from Address"`
-	Tag         string `json:"SIP from Tag"`
+	displayName string // display-name
+	address     *Uri   // SIP from Address"`
+	tag         string // SIP from Tag"`
 }
 
 func (from *From) SetDisplayName(displayName string) {
-	from.DisplayName = displayName
+	from.displayName = displayName
 }
 func (from *From) GetDisplayName() string {
-	return from.DisplayName
+	return from.displayName
 }
 func (from *From) SetAddress(address *Uri) {
-	from.Address = address
+	from.address = address
 }
 func (from *From) GetAddress() *Uri {
-	if from.Address != nil {
-		return from.Address
-	}
-	return nil
+	return from.address
 }
 func (from *From) SetTag(tag string) {
-	from.Tag = tag
+	from.tag = tag
 }
 func (from *From) GetTag() string {
-	return from.Tag
+	return from.tag
 }
 
 func NewFrom(displayName string, address *Uri, tag string) *From {
 	return &From{
-		DisplayName: displayName,
-		Address:     address,
-		Tag:         tag,
+		displayName: displayName,
+		address:     address,
+		tag:         tag,
 	}
 }
 func (from *From) Raw() (string, error) {
@@ -48,17 +45,17 @@ func (from *From) Raw() (string, error) {
 	if err := from.Validator(); err != nil {
 		return result, err
 	}
-	address, err := from.Address.Raw()
+	address, err := from.address.Raw()
 	if err != nil {
 		return result, err
 	}
-	if len(strings.TrimSpace(from.DisplayName)) == 0 {
+	if len(strings.TrimSpace(from.displayName)) == 0 {
 		result += fmt.Sprintf("From: <%s>", address)
 	} else {
-		result += fmt.Sprintf("From: \"%s\" %s", from.DisplayName, address)
+		result += fmt.Sprintf("From: \"%s\" %s", from.displayName, address)
 	}
-	if len(strings.TrimSpace(from.Tag)) > 0 {
-		result += fmt.Sprintf(";tag=%s", from.Tag)
+	if len(strings.TrimSpace(from.tag)) > 0 {
+		result += fmt.Sprintf(";tag=%s", from.tag)
 	}
 	result += "\r\n"
 	return result, nil
@@ -69,21 +66,17 @@ func (from *From) Parse(raw string) error {
 	}
 	raw = regexp.MustCompile(`\r`).ReplaceAllString(raw, "")
 	raw = regexp.MustCompile(`\n`).ReplaceAllString(raw, "")
-	raw = strings.TrimLeft(raw, " ")
-	raw = strings.TrimRight(raw, " ")
 	raw = strings.TrimPrefix(raw, " ")
 	raw = strings.TrimSuffix(raw, " ")
 	if len(strings.TrimSpace(raw)) == 0 {
 		return errors.New("the raw parameter is not allowed to be empty")
 	}
 	// from field regexp
-	fromFieldRegexp := regexp.MustCompile(`(?i)(from).*?:`)
-	if !fromFieldRegexp.MatchString(raw) {
+	fieldRegexp := regexp.MustCompile(`(?i)(from).*?:`)
+	if !fieldRegexp.MatchString(raw) {
 		return errors.New("raw is not a from header field")
 	}
-	raw = fromFieldRegexp.ReplaceAllString(raw, "")
-	raw = strings.TrimLeft(raw, " ")
-	raw = strings.TrimRight(raw, " ")
+	raw = fieldRegexp.ReplaceAllString(raw, "")
 	raw = strings.TrimPrefix(raw, " ")
 	raw = strings.TrimSuffix(raw, " ")
 	// address and tag regexp
@@ -95,31 +88,25 @@ func (from *From) Parse(raw string) error {
 	displayNameStr = regexp.MustCompile(`<`).ReplaceAllString(displayNameStr, "")
 	displayNameStr = regexp.MustCompile(`>`).ReplaceAllString(displayNameStr, "")
 	displayNameStr = regexp.MustCompile(`"`).ReplaceAllString(displayNameStr, "")
-	displayNameStr = strings.TrimLeft(displayNameStr, " ")
-	displayNameStr = strings.TrimRight(displayNameStr, " ")
 	displayNameStr = strings.TrimPrefix(displayNameStr, " ")
 	displayNameStr = strings.TrimSuffix(displayNameStr, " ")
 	if len(strings.TrimSpace(displayNameStr)) > 0 {
-		from.DisplayName = displayNameStr
+		from.displayName = displayNameStr
 	}
 	if addressAndTagRegexp.MatchString(raw) {
 		addressAndTag := addressAndTagRegexp.FindString(raw)
 		if tagRegexp.MatchString(addressAndTag) {
-			from.Tag = regexp.MustCompile(`(?i)(tag)=`).ReplaceAllString(tagRegexp.FindString(addressAndTag), "")
+			from.tag = regexp.MustCompile(`(?i)(tag)=`).ReplaceAllString(tagRegexp.FindString(addressAndTag), "")
 			addressAndTag = tagRegexp.ReplaceAllString(addressAndTag, "")
 		}
 		addressAndTag = regexp.MustCompile(`<`).ReplaceAllString(addressAndTag, "")
 		addressAndTag = regexp.MustCompile(`>`).ReplaceAllString(addressAndTag, "")
-		addressAndTag = strings.TrimLeft(addressAndTag, ";")
-		addressAndTag = strings.TrimRight(addressAndTag, ";")
 		addressAndTag = strings.TrimPrefix(addressAndTag, ";")
 		addressAndTag = strings.TrimSuffix(addressAndTag, ";")
-		addressAndTag = strings.TrimLeft(addressAndTag, " ")
-		addressAndTag = strings.TrimRight(addressAndTag, " ")
 		addressAndTag = strings.TrimPrefix(addressAndTag, " ")
 		addressAndTag = strings.TrimSuffix(addressAndTag, " ")
-		from.Address = new(Uri)
-		if err := from.Address.Parse(addressAndTag); err != nil {
+		from.address = new(Uri)
+		if err := from.address.Parse(addressAndTag); err != nil {
 			return err
 		}
 	}
@@ -130,8 +117,34 @@ func (from *From) Validator() error {
 	if reflect.DeepEqual(nil, from) {
 		return errors.New("from caller is not allowed to be nil")
 	}
-	if err := from.Address.Validator(); err != nil {
+	if err := from.address.Validator(); err != nil {
 		return fmt.Errorf("from address validator error : %s", err.Error())
 	}
 	return nil
+}
+func (from *From) String() string {
+	result := ""
+	if len(strings.TrimSpace(from.displayName)) > 0 {
+		result += fmt.Sprintf(" \"%s\"", from.displayName)
+		if !reflect.DeepEqual(nil, from.address) {
+			if len(result) > 0 {
+				result += fmt.Sprintf(" %s", from.address.String())
+			}
+		}
+	} else {
+		if !reflect.DeepEqual(nil, from.address) {
+			if len(result) > 0 {
+				result += fmt.Sprintf("<%s>", from.address.String())
+			}
+		}
+	}
+
+	if len(strings.TrimSpace(from.tag)) > 0 {
+		if len(result) > 0 {
+			result += fmt.Sprintf(";tag=%s", from.tag)
+		} else {
+			result += fmt.Sprintf("tag=%s", from.tag)
+		}
+	}
+	return result
 }

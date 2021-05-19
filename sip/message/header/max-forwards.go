@@ -10,18 +10,18 @@ import (
 )
 
 type MaxForwards struct {
-	Forwards uint8 `json:"Forwards"`
+	forwards uint8 // forwards
 }
 
 func (maxForwards *MaxForwards) SetForwards(forwards uint8) {
-	maxForwards.Forwards = forwards
+	maxForwards.forwards = forwards
 }
 func (maxForwards *MaxForwards) GetForwards() uint8 {
-	return maxForwards.Forwards
+	return maxForwards.forwards
 }
 func NewMaxForwards(forwards uint8) *MaxForwards {
 	return &MaxForwards{
-		Forwards: forwards,
+		forwards: forwards,
 	}
 }
 
@@ -30,7 +30,7 @@ func (maxForwards *MaxForwards) Raw() (string, error) {
 	if err := maxForwards.Validator(); err != nil {
 		return result, err
 	}
-	result += fmt.Sprintf("Max-Forwards: %d", maxForwards.Forwards)
+	result += fmt.Sprintf("Max-Forwards: %d", maxForwards.forwards)
 	result += "\r\n"
 	return result, nil
 }
@@ -40,8 +40,6 @@ func (maxForwards *MaxForwards) Parse(raw string) error {
 	}
 	raw = regexp.MustCompile(`\r`).ReplaceAllString(raw, "")
 	raw = regexp.MustCompile(`\n`).ReplaceAllString(raw, "")
-	raw = strings.TrimLeft(raw, " ")
-	raw = strings.TrimRight(raw, " ")
 	raw = strings.TrimPrefix(raw, " ")
 	raw = strings.TrimSuffix(raw, " ")
 	if len(strings.TrimSpace(raw)) == 0 {
@@ -53,8 +51,6 @@ func (maxForwards *MaxForwards) Parse(raw string) error {
 		return errors.New("raw is not a max-forwards header field")
 	}
 	raw = fieldRegexp.ReplaceAllString(raw, "")
-	raw = strings.TrimLeft(raw, " ")
-	raw = strings.TrimRight(raw, " ")
 	raw = strings.TrimPrefix(raw, " ")
 	raw = strings.TrimSuffix(raw, " ")
 	// forwards regexp
@@ -65,7 +61,7 @@ func (maxForwards *MaxForwards) Parse(raw string) error {
 		if err != nil {
 			return err
 		}
-		maxForwards.Forwards = uint8(forwards)
+		maxForwards.forwards = uint8(forwards)
 	}
 	return maxForwards.Validator()
 }
@@ -74,4 +70,9 @@ func (maxForwards *MaxForwards) Validator() error {
 		return errors.New("max-forwards caller is not allowed to be nil")
 	}
 	return nil
+}
+func (maxForwards *MaxForwards) String() string {
+	result := ""
+	result += fmt.Sprintf("%d", maxForwards.forwards)
+	return result
 }

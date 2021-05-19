@@ -184,9 +184,26 @@ func (requestUri *RequestUri) Validator() error {
 
 func (requestUri *RequestUri) String() string {
 	result := ""
-	result += fmt.Sprintf("%s:%s@%s", strings.ToLower(requestUri.schema), requestUri.user, requestUri.host)
+	if len(strings.TrimSpace(requestUri.schema)) > 0 {
+		result += fmt.Sprintf("%s:", strings.ToLower(requestUri.schema))
+	}
+	if len(strings.TrimSpace(requestUri.user)) > 0 {
+		result += requestUri.user
+	}
+	if len(strings.TrimSpace(requestUri.host)) > 0 {
+		if len(result) > 0 {
+			result += fmt.Sprintf("@%s", requestUri.host)
+		} else {
+			result += requestUri.host
+		}
+	}
 	if requestUri.port > 0 {
-		result += fmt.Sprintf(":%d", requestUri.port)
+		if len(result) > 0 {
+			result += fmt.Sprintf(":%d", requestUri.port)
+		} else {
+			result += fmt.Sprintf("%d", requestUri.port)
+
+		}
 	}
 	if requestUri.extension != nil {
 		extensions := ""
@@ -197,8 +214,10 @@ func (requestUri *RequestUri) String() string {
 				extensions += fmt.Sprintf(";%s=%v", k, v)
 			}
 		}
-
 		if len(strings.TrimSpace(extensions)) > 0 {
+			if len(result) == 0 {
+				extensions = strings.TrimPrefix(extensions, ";")
+			}
 			result += extensions
 		}
 	}
