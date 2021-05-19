@@ -1,7 +1,6 @@
 package header
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
 	"testing"
@@ -9,11 +8,7 @@ import (
 
 func TestNewUserAgent(t *testing.T) {
 	userAgent := NewUserAgent("SIP UAS V3.0.0.833566")
-	data, err := json.Marshal(userAgent)
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Printf("%s\r\n", data)
+	fmt.Println(userAgent.GetServer())
 }
 
 func TestUserAgent_Raw(t *testing.T) {

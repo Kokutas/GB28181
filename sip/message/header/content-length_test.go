@@ -1,7 +1,6 @@
 package header
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
 	"testing"
@@ -9,11 +8,7 @@ import (
 
 func TestNewContentLength(t *testing.T) {
 	cl := NewContentLength(0)
-	data, err := json.Marshal(cl)
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Printf("%s\r\n", data)
+	fmt.Println(cl.GetLength())
 }
 
 func TestContentLength_Raw(t *testing.T) {

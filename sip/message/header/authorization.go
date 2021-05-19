@@ -187,7 +187,7 @@ func (authorization *Authorization) Validator() error {
 func (authorization *Authorization) String() string {
 	result := ""
 	if len(strings.TrimSpace(authorization.authSchema)) > 0 {
-		result += fmt.Sprintf("%s", strings.Title(authorization.authSchema))
+		result += strings.Title(authorization.authSchema)
 	}
 	if len(strings.TrimSpace(authorization.username)) > 0 {
 		if len(result) > 0 {

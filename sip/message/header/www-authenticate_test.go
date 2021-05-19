@@ -1,7 +1,6 @@
 package header
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
 	"testing"
@@ -9,11 +8,7 @@ import (
 
 func TestNewWWWAuthenticate(t *testing.T) {
 	wwwAuthenticate := NewWWWAuthenticate("digest", "3402000000", "nonce123", "md5")
-	data, err := json.Marshal(wwwAuthenticate)
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Printf("%s\r\n", data)
+	fmt.Println(wwwAuthenticate.GetAlgorithm(), wwwAuthenticate.GetAuthSchema())
 }
 
 func TestWWWAuthenticate_Raw(t *testing.T) {

@@ -1,7 +1,6 @@
 package header
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
 	"testing"
@@ -9,11 +8,7 @@ import (
 
 func TestNewMaxForwards(t *testing.T) {
 	maxForwards := NewMaxForwards(70)
-	data, err := json.Marshal(maxForwards)
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Printf("%s\r\n", data)
+	fmt.Println(maxForwards.GetForwards())
 }
 
 func TestMaxForwards_Raw(t *testing.T) {

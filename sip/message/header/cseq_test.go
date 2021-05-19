@@ -1,7 +1,6 @@
 package header
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
 	"testing"
@@ -9,11 +8,7 @@ import (
 
 func TestNewCSeq(t *testing.T) {
 	cseq := NewCSeq(1, "register")
-	data, err := json.Marshal(cseq)
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Printf("%s\r\n", data)
+	fmt.Println(cseq.GetMethod())
 }
 
 func TestCSeq_Raw(t *testing.T) {

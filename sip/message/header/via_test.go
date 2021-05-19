@@ -1,7 +1,6 @@
 package header
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
 	"testing"
@@ -13,11 +12,7 @@ func TestNewVia(t *testing.T) {
 		NewVia("sip", 2.0, "udp", "3402000000", 0, 0, "z9hG4bK", ""),
 	}
 	for _, via := range vias {
-		data, err := json.Marshal(via)
-		if err != nil {
-			log.Fatal(err)
-		}
-		fmt.Printf("%s\r\n", data)
+		fmt.Println(via.GetSchema(), via.GetSentByAddress())
 	}
 }
 

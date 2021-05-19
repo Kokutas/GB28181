@@ -135,7 +135,7 @@ func (wwwAuthenticate *WWWAuthenticate) Validator() error {
 func (wwwAuthenticate *WWWAuthenticate) String() string {
 	result := ""
 	if len(strings.TrimSpace(wwwAuthenticate.authSchema)) > 0 {
-		result += fmt.Sprintf("%s", strings.Title(wwwAuthenticate.authSchema))
+		result += strings.Title(wwwAuthenticate.authSchema)
 	}
 	if len(strings.TrimSpace(wwwAuthenticate.realm)) > 0 {
 		if len(result) > 0 {

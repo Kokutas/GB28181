@@ -1,7 +1,6 @@
 package header
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
 	"testing"
@@ -9,11 +8,7 @@ import (
 
 func TestNewTo(t *testing.T) {
 	to := NewTo("", NewUri("sip", "34020000001320000001", "192.168.0.1", 0, nil), "")
-	data, err := json.Marshal(to)
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Printf("%s\r\n", data)
+	fmt.Println(to.GetAddress())
 }
 
 func TestTo_Raw(t *testing.T) {
@@ -36,11 +31,7 @@ func TestTo_Parse(t *testing.T) {
 		to := new(To)
 		fmt.Println(to.Parse(raw))
 		fmt.Println(to.Raw())
-		data, err := json.Marshal(to)
-		if err != nil {
-			log.Fatal(err)
-		}
-		fmt.Printf("%s\r\n", data)
+		fmt.Println(to.GetTag())
 	}
 
 }

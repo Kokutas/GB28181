@@ -1,7 +1,6 @@
 package header
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
 	"testing"
@@ -12,11 +11,7 @@ func TestNewRoute(t *testing.T) {
 		NewUri("sip", "34020000001320000001", "192.168.0.1", 5060, map[string]interface{}{"lr": ""}),
 		NewUri("sip", "34020000001320000001", "3402000000", 0, map[string]interface{}{"lr": ""}),
 	)
-	data, err := json.Marshal(route)
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Printf("%s\r\n", data)
+	fmt.Println(route.GetUris(), route.GetDisplayName())
 }
 
 func TestRoute_Raw(t *testing.T) {
